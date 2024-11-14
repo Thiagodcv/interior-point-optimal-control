@@ -40,8 +40,3 @@ end
 function compute_centering_plus_corrector_dir()
     return -1
 end
-
-
-
-
-
