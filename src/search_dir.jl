@@ -2,7 +2,7 @@ using LinearAlgebra
 
 
 """
-    compute_kkt_residual(param_dict, res_array, x, s, lambda, nu)
+    compute_kkt_residual(param_dict, res_array, x, lambda, nu, s)
 
 Computes the residual vector which encodes the KKT conditions of a quadratic program.
 NOTE: does NOT include the centering parameter nor the Mehrotra correction. Those are added on
@@ -18,14 +18,14 @@ by different functions later.
         - "b"::Array: the linear equality constraint limits (m,).
 - `res_array::Array`: an (n+2p+m,) array which is overwritten, and transformed into the KKT residual.
 - `x::Array`: the current primal iterate (n,).
-- `s::Array`: the current slack variable iterate for the inequality constraint (p,). Strictly positive.
 - `lambda::Array`: the current dual iterate for the inequality constraint (p,). Strictly positive.
 - `nu::Array`: the current dual iterate for the equality constraint (m,).
+- `s::Array`: the current slack variable iterate for the inequality constraint (p,). Strictly positive.
 
 # Returns
 - `Array`: the KKT residual. OR MAYBE DON'T RETURN -- JUST MODIFY RES_ARRAY
 """
-function compute_kkt_residual(param_dict, res_array, x, s, lambda, nu)
+function compute_kkt_residual(param_dict, res_array, x, lambda, nu, s)
     n = size(param_dict["Q"])[1]
     p = size(param_dict["G"])[1]
     m = size(param_dict["A"])[1]
