@@ -128,6 +128,29 @@ function compute_affine_scaling_dir(kkt_res, kkt_jac, n, p, m)
 end
 
 
-function compute_centering_plus_corrector_dir()
-    return -1
+"""
+    compute_centering_plus_corrector_dir(kkt_jac, d_s_aff, d_lambda_aff, sigma, mu, n, p, m)
+
+Compute centering-plus-corrector directions. NOTE: LOOK INTO REUSING CC_VEC.
+
+# Arguments
+- `kkt_jac::Array`: the (n+2p+m,n+2p+m) Jacobian of the residual vector described above.
+- `d_s_aff::Array`: the affine scaling direction for the slack vector (p,) associated with the inequality constraint.
+- `d_p_aff::Array`: the affine scaling direction for the dual vector (p,) associated with the inequality constraint.
+- `n::Integer64`: size of the primal variable x.
+- `p::Integer64`: number of inequality constraints.
+- `m::Integer64`: number of equality constraints.
+
+# Returns
+- `Dict{String, Array}`: the centering-plus-corrector directions for each primal and dual variable. 
+"""
+function compute_centering_plus_corrector_dir(kkt_jac, d_s_aff, d_lambda_aff, sigma, mu, n, p, m)
+    cc_vec = zeros((n+2*p+m,))
+    cc_vec[n+1:n+p] = sigma * mu - Diagonal(d_s_aff) * d_lambda_aff
+    cc_step = kkt_jac \ cc_vec
+    d_x_cc = cc_step[1:n]
+    d_s_cc = cc_step[n+1:n+p]
+    d_lambda_cc = cc_step[n+p+1:n+2*p]
+    d_nu_cc = cc_step[n+2*p+1:n+2*p+m]
+    return Dict("x" => d_x_cc, "s" => d_s_cc, "lambda" => d_lambda_cc, "nu" => d_nu_cc)
 end
