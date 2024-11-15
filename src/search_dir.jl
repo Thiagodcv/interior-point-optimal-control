@@ -119,12 +119,12 @@ Compute affine scaling steps for the primal and dual iterates.
 """
 function compute_affine_scaling_dir(kkt_res, kkt_jac, n, m, p)
     aff_step = kkt_jac \ (-kkt_res)
-    x_aff_step = aff_step[1:n]
-    s_aff_step = aff_step[n+1:n+p]
-    lambda_aff_step = aff_step[n+p+1:n+2*p]
-    nu_aff_step = aff_step[n+2*p+1:n+2*p+m]
+    d_x_aff = aff_step[1:n]
+    d_s_aff = aff_step[n+1:n+p]
+    d_lambda_aff = aff_step[n+p+1:n+2*p]
+    d_nu_aff = aff_step[n+2*p+1:n+2*p+m]
 
-    return Dict("x" => x_aff_step, "s" => s_aff_step, "lambda" => lambda_aff_step, "nu" => nu_aff_step)
+    return Dict("x" => d_x_aff, "s" => d_s_aff, "lambda" => d_lambda_aff, "nu" => d_nu_aff)
 end
 
 
