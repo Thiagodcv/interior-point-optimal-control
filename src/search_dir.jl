@@ -63,7 +63,8 @@ NOTE: does NOT include the centering parameter.
         - "b"::Array: the linear equality constraint limits (m,).
 - `lambda::Array`: the current dual iterate for the inequality constraint (p,). Strictly positive.
 - `s::Array`: the current slack variable iterate for the inequality constraint (p,). Strictly positive.
-- `jac::Array`: an (n+2p+m,n+2p+m) array which is overwritten, and transformed into the Jacobian of the KKT residual.
+- `jac::Array`: an (n+2p+m,n+2p+m) array which was output by this very function, but which will be updated with new `lambda` and `s` iterates. 
+                all other entries left untouched.
 
 # Returns
 - `Array`: the Jacobian matrix. Only returns if argument for jac not specified by user.
