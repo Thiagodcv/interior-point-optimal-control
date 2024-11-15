@@ -52,9 +52,7 @@ end
     h = [1.; 0.; 1.; 0.]
 
     param_dict = Dict("Q" => Q, "q" => q, "A" => A, "b" => b, "G" => G, "h" => h)
-    x = [0.5; 0.5]
     lambda = [1.; 2.; 3.; 4.]
-    nu = [5.]
     s = [3.; 1.; 3.; 1.]
     
     J = compute_kkt_jacobian(param_dict, lambda, s)
@@ -72,4 +70,21 @@ end
 
     tol = 1e-7
     @test norm(J - J_true) < tol
+
+    lambda = [2.; 5.; 4.; 3.]
+    s = [1.; 1.; 2.; 2.]
+    compute_kkt_jacobian(param_dict, lambda, s, J)
+    J_new_true = [1 0 0 0 0 0 1 -1 0 0 1; 
+                 0 1 0 0 0 0 0 0 1 -1 -1; 
+                0 0 2 0 0 0 1 0 0 0 0;
+                0 0 0 5 0 0 0 1 0 0 0;
+                0 0 0 0 4 0 0 0 2 0 0;
+                0 0 0 0 0 3 0 0 0 2 0;
+                1 0 1 0 0 0 0 0 0 0 0;
+                -1 0 0 1 0 0 0 0 0 0 0;
+                0 1 0 0 1 0 0 0 0 0 0;
+                0 -1 0 0 0 1 0 0 0 0 0;
+                1 -1 0 0 0 0 0 0 0 0 0]
+    
+    @test norm(J - J_new_true) < tol
 end

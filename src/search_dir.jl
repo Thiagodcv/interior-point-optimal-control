@@ -63,30 +63,41 @@ NOTE: does NOT include the centering parameter.
         - "b"::Array: the linear equality constraint limits (m,).
 - `lambda::Array`: the current dual iterate for the inequality constraint (p,). Strictly positive.
 - `s::Array`: the current slack variable iterate for the inequality constraint (p,). Strictly positive.
+- `jac::Array`: an (n+2p+m,n+2p+m) array which is overwritten, and transformed into the Jacobian of the KKT residual.
+
+# Returns
+- `Array`: the Jacobian matrix. Only returns if argument for jac not specified by user.
 """
-function compute_kkt_jacobian(param_dict, lambda, s)
+function compute_kkt_jacobian(param_dict, lambda, s, jac=nothing)
     n = size(param_dict["Q"])[1]
     p = size(param_dict["G"])[1]
     m = size(param_dict["A"])[1]
-    jac = zeros((n + 2*p + m, n + 2*p + m))
 
-    # First row of block matrices
-    jac[1:n, 1:n] = param_dict["Q"]
-    jac[1:n, n+p+1:n+2*p] = transpose(param_dict["G"]) 
-    jac[1:n, n+2*p+1:n+2*p+m] = transpose(param_dict["A"]) 
+    new_jac = false
+    if isnothing(jac)
+        new_jac = true
+        jac = zeros((n + 2*p + m, n + 2*p + m))
+    
+        # First row of block matrices
+        jac[1:n, 1:n] = param_dict["Q"]
+        jac[1:n, n+p+1:n+2*p] = transpose(param_dict["G"]) 
+        jac[1:n, n+2*p+1:n+2*p+m] = transpose(param_dict["A"]) 
 
-    # Second row of block matrices
+        # Third row of block matrices
+        jac[n+p+1:n+2*p, 1:n] = param_dict["G"]
+        jac[n+p+1:n+2*p, n+1:n+p] = Matrix{Float64}(I, p, p)
+
+        # Fourth row of block matrices
+        jac[n+2*p+1:n+2*p+m, 1:n] = param_dict["A"]
+    end
+
+    # Second row of block matrices. Left for last as these change per iteration.
     jac[n+1:n+p, n+1:n+p] = Diagonal(lambda)
     jac[n+1:n+p, n+p+1:n+2*p] = Diagonal(s)
 
-    # Third row of block matrices
-    jac[n+p+1:n+2*p, 1:n] = param_dict["G"]
-    jac[n+p+1:n+2*p, n+1:n+p] = Matrix{Float64}(I, p, p)
-
-    # Fourth row of block matrices
-    jac[n+2*p+1:n+2*p+m, 1:n] = param_dict["A"]
-
-    return jac
+    if new_jac
+        return jac
+    end
 end
 
 function compute_affine_scaling_dir()
