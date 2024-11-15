@@ -146,7 +146,7 @@ Compute centering-plus-corrector directions. NOTE: LOOK INTO REUSING CC_VEC.
 """
 function compute_centering_plus_corrector_dir(kkt_jac, d_s_aff, d_lambda_aff, sigma, mu, n, p, m)
     cc_vec = zeros((n+2*p+m,))
-    cc_vec[n+1:n+p] = sigma * mu - Diagonal(d_s_aff) * d_lambda_aff
+    cc_vec[n+1:n+p] = sigma * mu * ones((p,)) - Diagonal(d_s_aff) * d_lambda_aff
     cc_step = kkt_jac \ cc_vec
     d_x_cc = cc_step[1:n]
     d_s_cc = cc_step[n+1:n+p]
