@@ -21,7 +21,7 @@ Primal-dual interior point QP with Mehrotra correction.
 """
 function pdip_qp(param_dict, x0)
     epsilon_feas = 1e-6
-    epsilon = 1e-6
+    epsilon = 1e-7
     max_iters = 100
 
     # Find dimensions
@@ -37,7 +37,6 @@ function pdip_qp(param_dict, x0)
 
     # Other parameters
     mu = transpose(s) * lambda / p
-    sigma
 
     # Initial kkt residual and its Jacobian
     kkt_res = compute_kkt_residual(param_dict, x, lambda, nu, s)
