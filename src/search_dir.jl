@@ -35,7 +35,7 @@ end
 
 
 """
-    compute_kkt_Jacobian(param_dict, lambda, s)
+    compute_kkt_jacobian(param_dict, lambda, s)
 
 Computes the Jacobian of the residual vector which encodes the KKT conditions of a quadratic program.
 NOTE: does NOT include the centering parameter.
@@ -51,7 +51,7 @@ NOTE: does NOT include the centering parameter.
 - `lambda::Array`: the current dual iterate for the inequality constraint (p,). Strictly positive.
 - `s::Array`: the current slack variable iterate for the inequality constraint (p,). Strictly positive.
 """
-function compute_kkt_Jacobian(param_dict, lambda, s)
+function compute_kkt_jacobian(param_dict, lambda, s)
     n = size(param_dict["Q"])[1]
     p = size(param_dict["G"])[1]
     m = size(param_dict["A"])[1]
