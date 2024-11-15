@@ -103,7 +103,7 @@ end
 
 
 """
-    compute_affine_scaling_dir(kkt_res, kkt_jac)
+    compute_affine_scaling_dir(kkt_res, kkt_jac, n, p, m)
 
 Compute affine scaling steps for the primal and dual iterates. 
 
@@ -111,13 +111,13 @@ Compute affine scaling steps for the primal and dual iterates.
 - `kkt_res::Array`: the residual vector (n+2p+m,) which encodes the KKT conditions of a quadratic program. Does NOT include centering / Mehrotra correction.
 - `kkt_jac::Array`: the (n+2p+m,n+2p+m) Jacobian of the residual vector described above.
 - `n::Integer64`: size of the primal variable x.
-- `m::Integer64`: number of equality constraints.
 - `p::Integer64`: number of inequality constraints.
+- `m::Integer64`: number of equality constraints.
 
 # Returns
 - `Dict{String, Array}`: the affine scaling steps for each primal and dual variable. 
 """
-function compute_affine_scaling_dir(kkt_res, kkt_jac, n, m, p)
+function compute_affine_scaling_dir(kkt_res, kkt_jac, n, p, m)
     aff_step = kkt_jac \ (-kkt_res)
     d_x_aff = aff_step[1:n]
     d_s_aff = aff_step[n+1:n+p]

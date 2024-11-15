@@ -88,3 +88,36 @@ end
     
     @test norm(J - J_new_true) < tol
 end
+
+@testset "test_compute_affine_scaling_dir" begin
+    """
+    Test for computing the affine scaling direction.
+    """
+    n = 2
+    p = 4
+    m = 1
+
+    Q = Matrix{Float64}(I, 2, 2)
+    q = [2.; 2.]
+    A = [1. -1.]
+    b = [0.]
+    G = [1. 0.; -1. 0.; 0. 1.; 0. -1.]
+    h = [1.; 0.; 1.; 0.]
+
+    param_dict = Dict("Q" => Q, "q" => q, "A" => A, "b" => b, "G" => G, "h" => h)
+    x = [0.5; 0.5]
+    lambda = [1.; 2.; 3.; 4.]
+    nu = [5.]
+    s = [3.; 1.; 3.; 1.]
+    
+    F = compute_kkt_residual(param_dict, x, lambda, nu, s)
+    J = compute_kkt_jacobian(param_dict, lambda, s)
+
+    aff_step = compute_affine_scaling_dir(F, J, n, p, m)
+    aff_step_vec = vcat(aff_step["x"], aff_step["s"])
+    aff_step_vec = vcat(aff_step_vec, aff_step["lambda"])
+    aff_step_vec = vcat(aff_step_vec, aff_step["nu"])
+ 
+    tol = 1e-7
+    @test norm(J * aff_step_vec + F) < tol
+end
