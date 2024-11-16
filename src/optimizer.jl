@@ -133,7 +133,7 @@ function initial_step_size(u, d_u)
     if isempty(neg_idx)
         alpha_max = 1
     else
-        alpha_max = min(1, minimum(-u[neg_idx] ./ d_u[neg_idx]))
+        alpha_max = minimum(-u[neg_idx] ./ d_u[neg_idx])
     end
 
     return alpha_max

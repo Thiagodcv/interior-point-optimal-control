@@ -1,7 +1,6 @@
 include("../optimizer.jl")
 using Test
 
-
 @testset "test_pdip_qp" begin
     """
     Test for solving a 2d problem with 1 equality and 4 inequality (box) constraints.
@@ -24,3 +23,12 @@ using Test
     print("results: ", results)
 end
 
+@testset "test_initial_step_size_less_than_1" begin
+    u = [3; 2; 5; 1]
+    d_u = [-5; -1; 3; 5]
+    s_max = initial_step_size(u, d_u)
+    s_max_true = 3/5
+
+    tol = 1e-6
+    @test abs(s_max - s_max_true) < tol
+end
