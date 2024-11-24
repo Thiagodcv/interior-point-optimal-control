@@ -1,4 +1,4 @@
-include("../search_dir.jl")
+include("../optimizer/search_dir.jl")
 using Test
 
 @testset "test_compute_kkt_residual" begin
