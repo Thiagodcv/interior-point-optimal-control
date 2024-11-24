@@ -76,3 +76,32 @@ end
     # println(P_ret)
     @test norm(P - P_ret) < tol
 end
+
+
+@testset "test_mpc_to_qp_eq_mat" begin
+    """
+    Test to see if equality matrix is computed correctly.
+    """
+    A = [4. 0. 0.;
+         5. 6. 0.;
+         0. 1. 1.]
+    B = [1. 0.;
+         0. 1.;
+         0. 2.]
+    system_dict = Dict("A" => A, "B" => B)
+    n = 3
+    m = 2
+    T = 2
+    C_ret = mpc_to_qp_eq_mat(system_dict, n, m, T)
+
+    C = [-1. 0. 1. 0. 0. 0. 0. 0. 0. 0.;
+         0. -1. 0. 1. 0. 0. 0. 0. 0. 0.;
+         0. -2. 0. 0. 1. 0. 0. 0. 0. 0.;
+         0. 0. -4. 0. 0. -1. 0. 1. 0. 0.;
+         0. 0. -5. -6. 0. 0. -1. 0. 1. 0.;
+         0. 0. 0. -1. -1. 0. -2. 0. 0. 1.]
+
+    tol = 1e-6
+    # println(C_ret)
+    @test norm(C - C_ret) < tol
+end
