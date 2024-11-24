@@ -57,6 +57,9 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 
     # Construct equality matrix
     C = mpc_to_qp_eq_mat(system_dict, n, m, T)
+
+    # Construct linear term of QP cost
+    g = mpc_to_qp_linear_term(cost_dict, n, m, T)
 end
 
 
@@ -158,4 +161,24 @@ function mpc_to_qp_eq_mat(system_dict, n, m, T)
         end
     end
     return C
+end
+
+function mpc_to_qp_linear_term(cost_dict, n, m, T)
+    # Construct linear term of QP cost
+    g = zeros((T*(n+m),))
+    for idx in 1:T
+        beg_u = (idx-1)*(n+m) + 1
+        end_u = (idx-1)*(n+m) + 1 + (m-1)
+        beg_x = (idx-1)*(n+m) + 1 + m
+        end_x = idx*(n+m)
+
+        g[beg_u:end_u] = -2*cost_dict["S"] * u_latest + cost_dict["r"]
+
+        if idx < T
+            g[beg_x:end_x] = cost_dict["q"]
+        else
+            g[beg_x:end_x] = cost_dict["q_T"]
+        end
+    end
+    return g
 end
