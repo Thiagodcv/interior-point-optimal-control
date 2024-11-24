@@ -54,6 +54,9 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 
     # Construct inequality matrix
     P = mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
+
+    # Construct equality matrix
+    C = mpc_to_qp_eq_mat(system_dict, n, m, T)
 end
 
 
@@ -129,4 +132,30 @@ function mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
             P[beg_du_row:end_du_row, beg_u_last_col:end_u_last_col] = -constraint_dict["F_du"]
         end 
     end
+    return P
+end
+
+
+function mpc_to_qp_eq_mat(system_dict, n, m, T)
+    # Construct equality matrix
+    C = zeros((T*n, T*(n+m)))
+    for idx in 1:T
+        beg_u_col = (idx-1)*(n+m) + 1
+        end_u_col = (idx-1)*(n+m) + 1 + (m-1)
+        beg_x_col = (idx-1)*(n+m) + 1 + m
+        end_x_col = idx*(n+m)
+
+        beg_x_row = (idx-1)*n + 1
+        end_x_row = idx*n
+
+        C[beg_x_row:end_x_row, beg_u_col:end_u_col] = -system_dict["B"]
+        C[beg_x_row:end_x_row, beg_x_col:end_x_col] = Matrix{Float64}(I, n, n)
+
+        if idx < T 
+            beg_x_next_row = idx*n + 1
+            end_x_next_row = (idx+1)*n
+            C[beg_x_next_row:end_x_next_row, beg_x_col:end_x_col] = -system_dict["A"]
+        end
+    end
+    return C
 end
