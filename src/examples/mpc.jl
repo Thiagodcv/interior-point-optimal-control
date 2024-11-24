@@ -46,5 +46,38 @@ dictionary.
         - "b"::Array: the linear equality constraint limits (T*n,).
 """
 function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
-    return -1
+    n = size(cost_dict["Q"])[1]
+    m = size(cost_dict["R"])[1]
+
+    # Construct QP Hessian
+    H = mpc_to_qp_hessian(cost_dict, n, m, T)
+end
+
+function mpc_to_qp_hessian(cost_dict, n, m, T) 
+    # Construct QP Hessian
+    H = zeros((T*(n+m), T*(n+m)))
+    for idx in 1:T
+        beg_u = (idx-1)*(n+m) + 1
+        end_u = (idx-1)*(n+m) + 1 + (m-1)
+        beg_x = (idx-1)*(n+m) + 1 + m
+        end_x = idx*(n+m)
+
+        # indices for off-diagonal blocks
+        beg_u_next = idx*(n+m) + 1
+        end_u_next = idx*(n+m) + 1 + (m-1)
+
+        if idx < T
+            H[beg_u:end_u, beg_u:end_u] = cost_dict["R"] + 2*cost_dict["S"]
+            H[beg_x:end_x, beg_x:end_x] = cost_dict["Q"]
+
+            # off-diagonal blocks
+            H[beg_u:end_u, beg_u_next:end_u_next] = -cost_dict["S"]
+            H[beg_u_next:end_u_next, beg_u:end_u] = -cost_dict["S"]
+        else
+            H[beg_u:end_u, beg_u:end_u] = cost_dict["R"] + cost_dict["S"]
+            H[beg_x:end_x, beg_x:end_x] = cost_dict["Q_T"]
+        end
+    end
+    
+    return H
 end
