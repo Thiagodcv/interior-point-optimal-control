@@ -51,7 +51,11 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 
     # Construct QP Hessian
     H = mpc_to_qp_hessian(cost_dict, n, m, T)
+
+    # Construct inequality matrix
+    P = mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
 end
+
 
 function mpc_to_qp_hessian(cost_dict, n, m, T) 
     # Construct QP Hessian
@@ -78,6 +82,51 @@ function mpc_to_qp_hessian(cost_dict, n, m, T)
             H[beg_x:end_x, beg_x:end_x] = cost_dict["Q_T"]
         end
     end
-    
     return H
+end
+
+
+function mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
+    # Construct inequality matrix 
+    Fu_size = size(constraint_dict["F_u"])[1]
+    Fdu_size = size(constraint_dict["F_du"])[1]
+    Fx_size = size(constraint_dict["F_x"])[1]
+    FT_size = size(constraint_dict["F_T"])[1]
+    row_block_size = Fu_size + Fdu_size + Fx_size
+    P_rows = (T-1)*row_block_size + (Fu_size + Fdu_size + FT_size)
+
+    P = zeros(P_rows, T*(n+m))
+    for idx in 1:T
+        beg_u_row = (idx-1)*row_block_size + 1
+        end_u_row = (idx-1)*row_block_size + 1 + (Fu_size-1)
+        beg_du_row = (idx-1)*row_block_size + 1 + Fu_size
+        end_du_row = (idx-1)*row_block_size + 1 + Fu_size + (Fdu_size-1)
+        beg_x_row = (idx-1)*row_block_size + 1 + Fu_size + Fdu_size
+
+        if idx < T
+            end_x_row = idx*row_block_size
+        else
+            end_x_row = (idx-1)*row_block_size + 1 + Fu_size + Fdu_size + (FT_size - 1)
+        end
+
+        beg_u_col = (idx-1)*(n+m) + 1
+        end_u_col = (idx-1)*(n+m) + 1 + (m-1)
+        beg_x_col = (idx-1)*(n+m) + 1 + m
+        end_x_col = idx*(n+m)
+
+        P[beg_u_row:end_u_row, beg_u_col:end_u_col] = constraint_dict["F_u"]
+        P[beg_du_row:end_du_row, beg_u_col:end_u_col] = constraint_dict["F_du"]
+
+        if idx < T
+            P[beg_x_row:end_x_row, beg_x_col:end_x_col] = constraint_dict["F_x"]
+        else
+            P[beg_x_row:end_x_row, beg_x_col:end_x_col] = constraint_dict["F_T"]
+        end
+
+        if idx > 1
+            beg_u_last_col = (idx-2)*(n+m) + 1
+            end_u_last_col = (idx-2)*(n+m) + 1 + (m-1)
+            P[beg_du_row:end_du_row, beg_u_last_col:end_u_last_col] = -constraint_dict["F_du"]
+        end 
+    end
 end
