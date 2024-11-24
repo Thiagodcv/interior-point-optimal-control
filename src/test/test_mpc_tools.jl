@@ -35,3 +35,44 @@ include("../examples/mpc_tools.jl")
     tol = 1e-6
     @test norm(H - H_ret) < tol
 end
+
+
+@testset "test_mpc_to_qp_ineq_mat" begin
+    """
+    Test to see if inequality matrix is computed correctly.
+    """
+    F_u = [1. 0.;
+           0. 1.;
+           2. 1.]
+    F_du = [2. 2.]
+    F_x = [1. 2. 0.;
+           0. 3. 1.]
+    F_T = [3. 1. 0.;
+           2. 0. 1.;
+           0. 5. 6.]
+    
+
+    constraint_dict = Dict("F_u" => F_u, "F_du" => F_du, "F_x" => F_x, "F_T" => F_T)
+    n = 3
+    m = 2
+    T = 2
+    P_ret = mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
+
+    P = [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.;
+         0. 1. 0. 0. 0. 0. 0. 0. 0. 0.;
+         2. 1. 0. 0. 0. 0. 0. 0. 0. 0.;
+         2. 2. 0. 0. 0. 0. 0. 0. 0. 0;
+         0. 0. 1. 2. 0. 0. 0. 0. 0. 0.;
+         0. 0. 0. 3. 1. 0. 0. 0. 0. 0.;
+         0. 0. 0. 0. 0. 1. 0. 0. 0. 0.;
+         0. 0. 0. 0. 0. 0. 1. 0. 0. 0.;
+         0. 0. 0. 0. 0. 2. 1. 0. 0. 0.;
+         -2. -2. 0. 0. 0. 2. 2. 0. 0. 0.;
+         0. 0. 0. 0. 0. 0. 0. 3. 1. 0.;
+         0. 0. 0. 0. 0. 0. 0. 2. 0. 1.;
+         0. 0. 0. 0. 0. 0. 0. 0. 5. 6.]
+
+    tol = 1e-6
+    println(P_ret)
+    @test norm(P - P_ret) < tol
+end
