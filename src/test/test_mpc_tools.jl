@@ -105,3 +105,27 @@ end
     # println(C_ret)
     @test norm(C - C_ret) < tol
 end
+
+
+@testset "test_mpc_to_qp_linear_term" begin
+    """
+    Test to see if linear term of the QP cost is computed correctly.
+    """
+    S = [2. 0.;
+         0. 1.]
+    r = [5; 4]
+    q = [3; 2; 1]
+    q_T = [6; 1; 2]
+    u_latest = [1; 3]
+
+    cost_dict = Dict("S" => S, "r" => r, "q" => q, "q_T" => q_T)
+    n = 3
+    m = 2
+    T = 2
+    g_ret = mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
+    g = [1; -2; 3; 2; 1; 5; 4; 6; 1; 2]
+    
+    tol = 1e-6
+    println(g_ret)
+    @test norm(g - g_ret) < tol
+end

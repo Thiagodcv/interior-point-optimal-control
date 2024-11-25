@@ -59,7 +59,7 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
     C = mpc_to_qp_eq_mat(system_dict, n, m, T)
 
     # Construct linear term of QP cost
-    g = mpc_to_qp_linear_term(cost_dict, n, m, T)
+    g = mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
 
     # Construct inequality vector
     h = mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
@@ -170,7 +170,7 @@ function mpc_to_qp_eq_mat(system_dict, n, m, T)
 end
 
 
-function mpc_to_qp_linear_term(cost_dict, n, m, T)
+function mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
     # Construct linear term of QP cost
     g = zeros((T*(n+m),))
     for idx in 1:T
@@ -179,7 +179,11 @@ function mpc_to_qp_linear_term(cost_dict, n, m, T)
         beg_x = (idx-1)*(n+m) + 1 + m
         end_x = idx*(n+m)
 
-        g[beg_u:end_u] = -2*cost_dict["S"] * u_latest + cost_dict["r"]
+        if idx == 1
+            g[beg_u:end_u] = -2*cost_dict["S"] * u_latest + cost_dict["r"]
+        else
+            g[beg_u:end_u] = cost_dict["r"]
+        end
 
         if idx < T
             g[beg_x:end_x] = cost_dict["q"]
