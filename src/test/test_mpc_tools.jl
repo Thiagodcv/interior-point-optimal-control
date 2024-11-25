@@ -129,3 +129,26 @@ end
     println(g_ret)
     @test norm(g - g_ret) < tol
 end
+
+
+@testset "test_mpc_to_qp_ineq_vec" begin
+    """
+    Test to see if the inequality vector is computed correctly.
+    """
+    F_du = [2. 2.]
+    f_u = [1.; 3.; 2.]
+    f_du = [5.]
+    f_x = [7.; 3.]
+    f_T = [2.; 1.; 0.]
+
+    T = 2
+    u_latest = [1.; 3.]
+
+    constraint_dict = Dict("F_du" => F_du, "f_u" => f_u, "f_du" => f_du, "f_x" => f_x, "f_T" => f_T)
+    h_ret = mpc_to_qp_ineq_vec(constraint_dict, u_latest, T)
+    h = [1.; 3.; 2.; 13.; 7.; 3.; 1.; 3.; 2.; 5.; 2.; 1.; 0.]
+    
+    tol = 1e-6
+    # println(h_ret)
+    @test norm(h - h_ret) < tol
+end

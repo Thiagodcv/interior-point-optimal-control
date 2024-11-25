@@ -195,12 +195,12 @@ function mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
 end
 
 
-function mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
+function mpc_to_qp_ineq_vec(constraint_dict, u_latest, T)
     # Construct inequality vector
-    Fu_size = size(constraint_dict["F_u"])[1]
-    Fdu_size = size(constraint_dict["F_du"])[1]
-    Fx_size = size(constraint_dict["F_x"])[1]
-    FT_size = size(constraint_dict["F_T"])[1]
+    Fu_size = size(constraint_dict["f_u"])[1]
+    Fdu_size = size(constraint_dict["f_du"])[1]
+    Fx_size = size(constraint_dict["f_x"])[1]
+    FT_size = size(constraint_dict["f_T"])[1]
     row_block_size = Fu_size + Fdu_size + Fx_size
     h_rows = (T-1)*row_block_size + (Fu_size + Fdu_size + FT_size)
 
