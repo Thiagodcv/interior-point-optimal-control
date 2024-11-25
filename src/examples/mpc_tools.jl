@@ -62,6 +62,7 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
     g = mpc_to_qp_linear_term(cost_dict, n, m, T)
 
     # Construct inequality vector
+    h = mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
 end
 
 
@@ -188,6 +189,7 @@ end
 
 
 function mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
+    # Construct inequality vector
     Fu_size = size(constraint_dict["F_u"])[1]
     Fdu_size = size(constraint_dict["F_du"])[1]
     Fx_size = size(constraint_dict["F_x"])[1]
