@@ -60,6 +60,8 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 
     # Construct linear term of QP cost
     g = mpc_to_qp_linear_term(cost_dict, n, m, T)
+
+    # Construct inequality vector
 end
 
 
@@ -163,6 +165,7 @@ function mpc_to_qp_eq_mat(system_dict, n, m, T)
     return C
 end
 
+
 function mpc_to_qp_linear_term(cost_dict, n, m, T)
     # Construct linear term of QP cost
     g = zeros((T*(n+m),))
@@ -181,4 +184,40 @@ function mpc_to_qp_linear_term(cost_dict, n, m, T)
         end
     end
     return g
+end
+
+
+function mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
+    Fu_size = size(constraint_dict["F_u"])[1]
+    Fdu_size = size(constraint_dict["F_du"])[1]
+    Fx_size = size(constraint_dict["F_x"])[1]
+    FT_size = size(constraint_dict["F_T"])[1]
+    row_block_size = Fu_size + Fdu_size + Fx_size
+    h_rows = (T-1)*row_block_size + (Fu_size + Fdu_size + FT_size)
+
+    h = zeros((h_rows,))
+
+    for idx in 1:T
+        beg_u = (idx-1)*row_block_size + 1
+        end_u = (idx-1)*row_block_size + 1 + (Fu_size-1)
+        beg_du = (idx-1)*row_block_size + 1 + Fu_size
+        end_du = (idx-1)*row_block_size + 1 + Fu_size + (Fdu_size-1)
+        beg_x = (idx-1)*row_block_size + 1 + Fu_size + Fdu_size
+
+        h[beg_u:end_u] = constraint_dict["f_u"]
+        h[beg_du:end_du] = constraint_dict["f_du"]
+
+        if idx == 1
+            h[beg_du:end_du] += constraint_dict["F_du"] * u_latest
+        end
+
+        if idx < T
+            end_x = idx*row_block_size
+            h[beg_x:end_x] = constraint_dict["f_x"]
+        else
+            end_x = (idx-1)*row_block_size + 1 + Fu_size + Fdu_size + (FT_size - 1)
+            h[beg_x:end_x] = constraint_dict["f_T"]
+        end
+    end
+    return h
 end
