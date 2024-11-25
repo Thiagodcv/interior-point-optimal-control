@@ -52,20 +52,23 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
     # Construct QP Hessian
     H = mpc_to_qp_hessian(cost_dict, n, m, T)
 
+    # Construct linear term of QP cost
+    g = mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
+
     # Construct inequality matrix
     P = mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
+
+    # Construct inequality vector
+    h = mpc_to_qp_ineq_vec(constraint_dict, u_latest, T)
 
     # Construct equality matrix
     C = mpc_to_qp_eq_mat(system_dict, n, m, T)
 
-    # Construct linear term of QP cost
-    g = mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
-
-    # Construct inequality vector
-    h = mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
-
     # Construct equality vector
     b = mpc_to_qp_eq_vec(system_dict, x0, n, T)
+
+    ret_dict = Dict("Q" => H, "q" => g, "G" => P, "h" => h, "A" => C, "b" => b)
+    return ret_dict
 end
 
 
