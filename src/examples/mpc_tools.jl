@@ -72,8 +72,12 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 end
 
 
+"""
+    mpc_to_qp_hessian(cost_dict, n, m, T) 
+
+Construct QP Hessian. Refer to `mpc_to_qp` function for docstring.
+"""
 function mpc_to_qp_hessian(cost_dict, n, m, T) 
-    # Construct QP Hessian
     H = zeros((T*(n+m), T*(n+m)))
     for idx in 1:T
         beg_u = (idx-1)*(n+m) + 1
@@ -101,8 +105,12 @@ function mpc_to_qp_hessian(cost_dict, n, m, T)
 end
 
 
-function mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
-    # Construct inequality matrix 
+"""
+    mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
+
+Construct inequality matrix. Refer to `mpc_to_qp` function for docstring.
+"""
+function mpc_to_qp_ineq_mat(constraint_dict, n, m, T) 
     Fu_size = size(constraint_dict["F_u"])[1]
     Fdu_size = size(constraint_dict["F_du"])[1]
     Fx_size = size(constraint_dict["F_x"])[1]
@@ -148,6 +156,11 @@ function mpc_to_qp_ineq_mat(constraint_dict, n, m, T)
 end
 
 
+"""
+    mpc_to_qp_eq_mat(system_dict, n, m, T)
+
+Construct equality matrix. Refer to `mpc_to_qp` function for docstring.
+"""
 function mpc_to_qp_eq_mat(system_dict, n, m, T)
     # Construct equality matrix
     C = zeros((T*n, T*(n+m)))
@@ -173,8 +186,12 @@ function mpc_to_qp_eq_mat(system_dict, n, m, T)
 end
 
 
+"""
+    mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
+
+Construct linear term of QP cost. Refer to `mpc_to_qp` function for docstring.
+"""
 function mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
-    # Construct linear term of QP cost
     g = zeros((T*(n+m),))
     for idx in 1:T
         beg_u = (idx-1)*(n+m) + 1
@@ -198,8 +215,12 @@ function mpc_to_qp_linear_term(cost_dict, n, m, u_latest, T)
 end
 
 
+"""
+    mpc_to_qp_ineq_vec(constraint_dict, u_latest, T)
+
+Construct inequality vector. Refer to `mpc_to_qp` function for docstring.
+"""
 function mpc_to_qp_ineq_vec(constraint_dict, u_latest, T)
-    # Construct inequality vector
     Fu_size = size(constraint_dict["f_u"])[1]
     Fdu_size = size(constraint_dict["f_du"])[1]
     Fx_size = size(constraint_dict["f_x"])[1]
@@ -235,8 +256,12 @@ function mpc_to_qp_ineq_vec(constraint_dict, u_latest, T)
 end
 
 
+"""
+    mpc_to_qp_eq_vec(system_dict, x0, n, T)
+
+Construct equality vector. Refer to `mpc_to_qp` function for docstring.
+"""
 function mpc_to_qp_eq_vec(system_dict, x0, n, T)
-    # Construct equality vector
     b = zeros((T*n,))
 
     for idx in 1:T
