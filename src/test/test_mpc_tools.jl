@@ -126,7 +126,7 @@ end
     g = [1; -2; 3; 2; 1; 5; 4; 6; 1; 2]
     
     tol = 1e-6
-    println(g_ret)
+    # println(g_ret)
     @test norm(g - g_ret) < tol
 end
 
