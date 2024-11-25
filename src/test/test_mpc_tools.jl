@@ -152,3 +152,27 @@ end
     # println(h_ret)
     @test norm(h - h_ret) < tol
 end
+
+
+@testset "test_mpc_to_qp_eq_vec" begin
+    """
+    Test to see if the equality vector is computed correctly.
+    """
+    T = 2
+    n = 3
+    w = [2; 1; 3]
+    A = [4. 0. 0.; 
+         5. 6. 0.; 
+         0. 1. 1.]
+    B = [1. 0.;
+         0. 1.;
+         0. 2.]
+    x0 = [1.; 1.; 5.]
+
+    system_dict = Dict("A" => A, "B" => B, "x0" => x0, "w" => w)
+    b_ret = mpc_to_qp_eq_vec(system_dict, x0, n, T)
+    b = [6.; 12.; 9.; 2.; 1.; 3.]
+    
+    tol = 1e-6
+    @test norm(b - b_ret) < tol
+end
