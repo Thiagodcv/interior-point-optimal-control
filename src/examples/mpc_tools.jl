@@ -63,6 +63,9 @@ function mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 
     # Construct inequality vector
     h = mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
+
+    # Construct equality vector
+    b = mpc_to_qp_eq_vec(system_dict, x0, n, T)
 end
 
 
@@ -222,4 +225,21 @@ function mpc_to_qp_ineq_vec(constraint_dict, T, u_latest)
         end
     end
     return h
+end
+
+
+function mpc_to_qp_eq_vec(system_dict, x0, n, T)
+    # Construct equality vector
+    b = zeros((T*n,))
+
+    for idx in 1:T
+        beg_x = (idx-1)*n + 1
+        end_x = idx*n
+
+        b[beg_x:end_x] = system_dict["w"]
+        if idx == 1
+            b[beg_x:end_x] += system_dict["A"] * x0
+        end
+    end
+    return b
 end
