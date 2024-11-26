@@ -222,4 +222,3 @@ end
     @test norm(f_du - box_dict["f_du"]) < tol
     @test norm(f_T - box_dict["f_T"]) < tol
 end
-
