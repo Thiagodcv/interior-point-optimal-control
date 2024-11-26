@@ -334,6 +334,8 @@ end
 
     x_init = zeros((T*(n+m),))
     ret = pdip_qp(qp_dict, x_init)
+    ret_separate = separate_solution(ret["x"], n, m, u_latest, T)
     println("iters: ", ret["iters"])
-    println("solution: ", ret["x"])
+    # println("solution: ", ret["x"])
+    println("solution: ", ret_separate)
 end

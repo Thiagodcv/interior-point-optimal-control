@@ -322,3 +322,46 @@ function box_constraints(limit_dict)
     
     return Dict("F_x" => F_x, "f_x" => f_x, "F_u" => F_u, "f_u" => f_u, "F_du" => F_du, "f_du" => f_du, "F_T" => F_T, "f_T" => f_T)
 end
+
+
+"""
+    separate_solution(sol, n, m, u_latest, T)
+
+Separate the solution output by an optimal control problem into three arrays containing
+the states, the inputs, and the input differences.
+
+# Arguments
+- `sol::Array`: the solution output by the QP.
+- `n:Integer64`: the state dimension.
+- `m:Integer64`: the input dimension.
+- `u_latest:Array`: the last input before the optimal control problem was solved.
+- `T:Integer64`: the prediction horizon.
+
+# Returns
+- `Dict{String, Array}`: three arrays with keys "x", "u", and "du" of size T*n, T*m, and T*m respectively.
+"""
+function separate_solution(sol, n, m, u_latest, T)
+    x = zeros((T*n,))
+    u = zeros((T*m,))
+    du = zeros((T*m,))
+
+    for idx in 1:T
+        beg_x_qp = (idx-1)*(n+m) + 1 + m
+        end_x_qp = idx*(n+m)
+        beg_u_qp = (idx-1)*(n+m) + 1
+        end_u_qp = (idx-1)*(n+m) + 1 + (m-1)
+
+        beg_x = (idx-1)*n + 1
+        end_x = idx*n
+        x[beg_x:end_x] = sol[beg_x_qp:end_x_qp]
+
+        beg_u = (idx-1)*m + 1
+        end_u = idx*m
+        u[beg_u:end_u] = sol[beg_u_qp:end_u_qp]
+        du[beg_u:end_u] = sol[beg_u_qp:end_u_qp] - u_latest
+        
+        u_latest = u[beg_u:end_u]
+    end
+
+    return Dict("x" => x, "u" => u, "du" => du)
+end
