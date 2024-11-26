@@ -188,8 +188,11 @@ end
     u_ub = [3.; -1.]
     du_lb = [-0.5; 0.5]
     du_ub = [1.; 1.]
+    x_T_lb = [-1.; 0.; 2.]
+    x_T_ub = [3.; 1.; 5.]
 
-    limit_dict = Dict("x_lb" => x_lb, "x_ub" => x_ub, "u_lb" => u_lb, "u_ub" => u_ub, "du_lb" => du_lb, "du_ub" => du_ub)
+    limit_dict = Dict("x_lb" => x_lb, "x_ub" => x_ub, "u_lb" => u_lb, "u_ub" => u_ub, 
+                      "du_lb" => du_lb, "du_ub" => du_ub, "x_T_lb" => x_T_lb, "x_T_ub" => x_T_ub)
     box_dict = box_constraints(limit_dict)
 
     F_x = [1. 0. 0.; 
@@ -198,6 +201,7 @@ end
            -1. 0. 0.;
            0. -1. 0.;
            0. 0. -1.]
+    F_T = F_x
     F_u = [1. 0.;
            0. 1.;
            -1. 0.;
@@ -206,13 +210,16 @@ end
     f_x = [3.; 2.; 1.; 1.; 2.; 3.]
     f_u = [3.; -1.; 1.; 5.]
     f_du = [1.; 1.; 0.5; -0.5]
+    f_T = [3.; 1.; 5.; 1.; 0; -2.]
     
     tol = 1e-6
     @test norm(F_x - box_dict["F_x"]) < tol
     @test norm(F_u - box_dict["F_u"]) < tol
     @test norm(F_du - box_dict["F_du"]) < tol
+    @test norm(F_T - box_dict["F_T"]) < tol
     @test norm(f_x - box_dict["f_x"]) < tol
     @test norm(f_u - box_dict["f_u"]) < tol
     @test norm(f_du - box_dict["f_du"]) < tol
+    @test norm(f_T - box_dict["f_T"]) < tol
 end
 

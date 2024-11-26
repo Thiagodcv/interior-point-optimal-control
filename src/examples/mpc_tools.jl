@@ -289,7 +289,9 @@ Compute box constraints for x, u, and du.
         - "u_ub"::Array: the upper limit of the input variable u,
         - "u_lb"::Array: the lower limit of the input variable u,
         - "du_ub"::Array: the upper limit of the differenced input variable du,
-        - "du_lb"::Array: the lower limit of the differenced input variable du.
+        - "du_lb"::Array: the lower limit of the differenced input variable du,
+        - "x_T_ub"::Array: the upper limit of the state variable x,
+        - "x_T_lb"::Array: the lower limit of the state variable x.
 
 # Returns
 - `Dict{String, Array}`: inequality constraint parameters of the quadratic program. Contains key-value pairs
@@ -298,7 +300,9 @@ Compute box constraints for x, u, and du.
         - "F_u"::Array: the matrix of the inequality constraint for u,
         - "f_u"::Array: the vector of the inequality constraint for u,
         - "F_du"::Array: the matrix of the inequality constraint for du,
-        - "f_du"::Array: the vector of the inequality constraint for du.
+        - "f_du"::Array: the vector of the inequality constraint for du,
+        - "F_T"::Array: the matrix of the inequality constraint for the terminal state,
+        - "f_T"::Array: the vector of the inequality constraint for the terminal state.
 """
 function box_constraints(limit_dict)
     n = size(limit_dict["x_ub"])[1]
@@ -312,6 +316,9 @@ function box_constraints(limit_dict)
 
     F_du = vcat(Matrix{Float64}(I, m, m), -Matrix{Float64}(I, m, m))
     f_du = vcat(limit_dict["du_ub"], -limit_dict["du_lb"])
+
+    F_T = vcat(Matrix{Float64}(I, n, n), -Matrix{Float64}(I, n, n))
+    f_T = vcat(limit_dict["x_T_ub"], -limit_dict["x_T_lb"])
     
-    return Dict("F_x" => F_x, "f_x" => f_x, "F_u" => F_u, "f_u" => f_u, "F_du" => F_du, "f_du" => f_du)
+    return Dict("F_x" => F_x, "f_x" => f_x, "F_u" => F_u, "f_u" => f_u, "F_du" => F_du, "f_du" => f_du, "F_T" => F_T, "f_T" => f_T)
 end
