@@ -275,3 +275,43 @@ function mpc_to_qp_eq_vec(system_dict, x0, n, T)
     end
     return b
 end
+
+
+"""
+    box_constraints(limit_dict)
+
+Compute box constraints for x, u, and du.
+
+# Arguments
+- `limit_dict::Dict{String, Array}`: upper and lower limits on decision variables. Contains key-value pairs
+        - "x_ub"::Array: the upper limit of the state variable x,
+        - "x_lb"::Array: the lower limit of the state variable x,
+        - "u_ub"::Array: the upper limit of the input variable u,
+        - "u_lb"::Array: the lower limit of the input variable u,
+        - "du_ub"::Array: the upper limit of the differenced input variable du,
+        - "du_lb"::Array: the lower limit of the differenced input variable du.
+
+# Returns
+- `Dict{String, Array}`: inequality constraint parameters of the quadratic program. Contains key-value pairs
+        - "F_x"::Array: the matrix of the inequality constraint for x,
+        - "f_x"::Array: the vector of the inequality constraint for x,
+        - "F_u"::Array: the matrix of the inequality constraint for u,
+        - "f_u"::Array: the vector of the inequality constraint for u,
+        - "F_du"::Array: the matrix of the inequality constraint for du,
+        - "f_du"::Array: the vector of the inequality constraint for du.
+"""
+function box_constraints(limit_dict)
+    n = size(limit_dict["x_ub"])[1]
+    m = size(limit_dict["u_ub"])[1]
+
+    F_x = vcat(Matrix{Float64}(I, n, n), -Matrix{Float64}(I, n, n))
+    f_x = vcat(limit_dict["x_ub"], -limit_dict["x_lb"])
+
+    F_u = vcat(Matrix{Float64}(I, m, m), -Matrix{Float64}(I, m, m))
+    f_u = vcat(limit_dict["u_ub"], -limit_dict["u_lb"])
+
+    F_du = vcat(Matrix{Float64}(I, m, m), -Matrix{Float64}(I, m, m))
+    f_du = vcat(limit_dict["du_ub"], -limit_dict["du_lb"])
+    
+    return Dict("F_x" => F_x, "f_x" => f_x, "F_u" => F_u, "f_u" => f_u, "F_du" => F_du, "f_du" => f_du)
+end
