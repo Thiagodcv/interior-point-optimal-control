@@ -282,6 +282,28 @@ end
 # end
 
 
+@testset "test_separate_solution" begin
+     """
+    Test to see if separate_solution() returns the correct result.
+    """
+     sol = [11; 12; 1; 2; 3; 13; 14; 4; 5; 6]
+     u_latest = [9; 10]
+     n = 3
+     m = 2
+     T = 2
+     sep_sol = separate_solution(sol, n, m, u_latest, T)
+
+     x = [1; 2; 3; 4; 5; 6]
+     u = [11; 12; 13; 14]
+     du = [2; 2; 2; 2]
+
+     tol = 1e-6
+     @test norm(sep_sol["x"] - x) < tol
+     @test norm(sep_sol["u"] - u) < tol
+     @test norm(sep_sol["du"] - du) < tol
+end
+
+
 @testset "test_double_integrator" begin
     """
     Test to see if can solve the double integrator optimal control problem on an LTI system.
