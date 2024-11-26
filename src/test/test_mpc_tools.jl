@@ -359,5 +359,7 @@ end
     ret_separate = separate_solution(ret["x"], n, m, u_latest, T)
     println("iters: ", ret["iters"])
     # println("solution: ", ret["x"])
-    println("solution: ", ret_separate)
+    println("state solution: ", ret_separate["x"])
+    println("input solution: ", ret_separate["u"])
+    println("diff input solution: ", ret_separate["du"])
 end
