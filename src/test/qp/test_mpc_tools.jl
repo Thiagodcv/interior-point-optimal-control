@@ -1,5 +1,5 @@
-include("../examples/mpc_tools.jl")
-include("../optimizer/optimizer.jl")
+include("../../examples/mpc_tools.jl")
+include("../../optimizers/qp/optimizer.jl")
 
 
 @testset "test_mpc_to_qp_hessian" begin

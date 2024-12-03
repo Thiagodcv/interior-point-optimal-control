@@ -1,4 +1,4 @@
-include("../optimizer/optimizer.jl")
+include("../../optimizers/qp/optimizer.jl")
 using Test
 
 @testset "test_pdip_qp" begin
