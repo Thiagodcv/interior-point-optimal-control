@@ -413,3 +413,55 @@ end
      @test norm(constraint_vec - expected_vec) < tol
  end
  
+
+ @testset "test_nonlinear_eq_jacobian" begin
+     """
+     Test to see if nonlinear_eq_jacobian returns the correct answer.
+     """
+     x0 = [1.; 2.]
+     x1 = [2.; 3.]
+     x2 = [3.; 4.]
+     x3 = [4.; 5.]
+
+     u0 = [5.; 6.; 7.]
+     u1 = [7.; 8.; 9.]
+     u2 = [9.; 10.; 11.]
+
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     n_x = 2
+     n_u = 3
+     T = 3
+
+     function f(x, u)
+          return norm(u)^2 * [sin(x[1])*x[2]; sin(x[2])*x[1]]
+     end
+
+     function fx(x, u)
+          mat = [cos(x[1])*x[2] sin(x[1]); 
+                 sin(x[2]) cos(x[2])*x[1]]
+          return norm(u)^2 * mat
+     end
+
+     function fu(x, u)
+          return 2*[sin(x[1])*x[2]; sin(x[2])*x[1]] * transpose(u)
+     end
+
+     epsilon = 1e-8
+     fx1 = (f(x0 + [epsilon; 0], u0) - f(x0, u0)) / epsilon
+     fx2 = (f(x0 + [0; epsilon], u0) - f(x0, u0)) / epsilon
+     fx_hat = hcat(fx1, fx2)
+
+     fu1 = (f(x0, u0 + [epsilon; 0; 0]) - f(x0, u0)) / epsilon
+     fu2 = (f(x0, u0 + [0; epsilon; 0]) - f(x0, u0)) / epsilon
+     fu3 = (f(x0, u0 + [0; 0; epsilon]) - f(x0, u0)) / epsilon
+     fu_hat = hcat(fu1, fu2, fu3)
+
+
+     # Ensure my Jacobians fx and fu were computed right.
+     tol = 1e-5
+     @test norm(fx(x0, u0) - fx_hat) < tol
+     @test norm(fu(x0, u0) - fu_hat) < tol
+
+
+ end
+ 
