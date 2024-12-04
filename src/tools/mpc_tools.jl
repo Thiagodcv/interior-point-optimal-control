@@ -416,3 +416,61 @@ function nonlinear_eq_constraint(z, x0, n_x, n_u, T, dyn, constraint_vec=nothing
     end
 end
 
+
+"""
+    nonlinear_eq_jacobian(z, x0, n_x, n_u, T, f_x, f_u, jac=nothing)
+
+Compute the Jacobian of the nonlinear inequality vector.
+
+# Arguments
+- `z::Array`: the primal variable in an NLP problem.
+- `x0::Array`: the initial state.
+- `n_x::Integer64`: the state dimension.
+- `n_u::Integer64`: the input dimension.
+- `T::Integer64`: the time horizon of the optimal control problem.
+- `f_x:Function`: the Jacobian of the dynamics function with respect to state.
+- `f_u:Function`: the Jacobian of the dynamics function with respect to input.
+- `constraint_vec:Array`: allocated memory for a previously computed equality constraint.
+        If equals to nothing, allocate new memory for vector.
+
+# Returns
+- `Array`: the Jacobian.
+"""
+function nonlinear_eq_jacobian(z, x0, n_x, n_u, T, f_x, f_u, jac=nothing)
+    new_jac = false
+
+    if nothing(jac)
+        new_jac = true
+        jac = zeros((T*n_x, T*(n_x + n_u)))
+    end
+
+    x_curr = x0
+    for idx in 1:T
+        beg_u_col = (idx-1)*(n+m) + 1
+        end_u_col = (idx-1)*(n+m) + 1 + (m-1)
+        beg_x_col = (idx-1)*(n+m) + 1 + m
+        end_x_col = idx*(n+m)
+
+        beg_x_row = (idx-1)*n + 1
+        end_x_row = idx*n
+
+        u_curr = z[beg_u_col:end_u_col]
+
+        jac[beg_x_row:end_x_row, beg_u_col:end_u_col] = -f_u(x_curr, u_curr)
+        if new_jac
+            jac[beg_x_row:end_x_row, beg_x_col:end_x_col] = Matrix{Float64}(I, n, n)
+        end
+
+        if idx < T 
+            beg_x_next_row = idx*n + 1
+            end_x_next_row = (idx+1)*n
+            jac[beg_x_next_row:end_x_next_row, beg_x_col:end_x_col] = -f_x(x_curr, u_curr)
+        end
+
+        x_curr = z[beg_x_col:end_x_col]
+    end
+
+    if new_jac
+        return jac
+    end
+end
