@@ -365,3 +365,54 @@ function separate_solution(sol, n, m, u_latest, T)
 
     return Dict("x" => x, "u" => u, "du" => du)
 end
+
+
+"""
+    nonlinear_eq_constraint(z, dyn)
+
+Given the primal variable of an NLP problem and a (nonlinear) dynamics function,
+output the vector representing the equality constraints in the NLP.
+
+# Arguments
+- `z::Array`: the primal variable in an NLP problem.
+- `x0::Array`: the initial state.
+- `n_x::Integer64`: the state dimension.
+- `n_u::Integer64`: the input dimension.
+- `T::Integer64`: the time horizon of the optimal control problem.
+- `dyn:Function`: the dynamics function.
+- `constraint_vec:Array`: allocated memory for a previously computed equality constraint.
+        If equals to nothing, allocate new memory for vector.
+
+# Returns
+- `Array`: the vector encoding equality constraints.
+"""
+function nonlinear_eq_constraint(z, x0, n_x, n_u, T, dyn, constraint_vec=nothing)
+    
+    new_vec = false
+    if isnothing(constraint_vec)
+        new_vec = true
+        constraint_vec = zeros((T*(n_x + n_u),))
+    end
+
+    last_x = x0
+    for idx in 1:T
+        beg_u_z = (idx-1)*(n_x + n_u) + 1
+        end_u_z = (idx-1)*(n_x + n_u) + 1 + (n_u-1)
+        beg_x_z = (idx-1)*(n_x + n_u) + 1 + n_u
+        end_x_z = idx*(n_x + n_u)
+        
+        last_u = z[beg_u_z:end_u_z]
+        curr_x = z[beg_x_z:end_x_z]
+
+        beg_x_const = (idx-1)*n_x + 1
+        end_x_const = idx*n_x
+        constraint_vec[beg_x_const:end_x_const] = curr_x - dyn(last_x, last_u)
+
+        last_x = curr_x
+    end
+
+    if new_vec
+        return constraint_vec
+    end
+end
+
