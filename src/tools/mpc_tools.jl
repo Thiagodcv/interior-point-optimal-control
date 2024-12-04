@@ -391,7 +391,7 @@ function nonlinear_eq_constraint(z, x0, n_x, n_u, T, dyn, constraint_vec=nothing
     new_vec = false
     if isnothing(constraint_vec)
         new_vec = true
-        constraint_vec = zeros((T*(n_x + n_u),))
+        constraint_vec = zeros((T*n_x,))
     end
 
     last_x = x0

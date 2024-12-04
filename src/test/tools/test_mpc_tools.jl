@@ -363,3 +363,39 @@ end
     println("input solution: ", ret_separate["u"])
     println("diff input solution: ", ret_separate["du"])
 end
+
+
+@testset "test_nonlinear_eq_constraint" begin
+     """
+     Test to see if nonlinear_eq_constraint returns the correct answer.
+     """
+     x0 = [1.; 2.]
+     x1 = [2.; 3.]
+     x2 = [3.; 4.]
+     x3 = [4.; 5.]
+
+     u0 = [5.; 6.; 7.]
+     u1 = [7.; 8.; 9.]
+     u2 = [9.; 10.; 11.]
+
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     n_x = 2
+     n_u = 3
+     T = 3
+
+     function f(x, u)
+          return norm(u)^2 * [sin(x[1])*x[2]; sin(x[2])*x[1]]
+     end
+
+     constraint_vec = nonlinear_eq_constraint(z, x0, n_x, n_u, T, f)
+
+     expected_vec = x1 - f(x0, u0)
+     expected_vec = vcat(expected_vec, x2 - f(x1, u1))
+     expected_vec = vcat(expected_vec, x3 - f(x2, u2))
+
+     tol = 1e-7
+     # println(constraint_vec)
+     # println(expected_vec)
+     @test norm(constraint_vec - expected_vec) < tol
+ end
+ 
