@@ -477,7 +477,22 @@ end
 
      jac = nonlinear_eq_jacobian(z, x0, n_x, n_u, T, fx, fu)
      @test norm(jac - test_jac) < tol
-     println(jac)
-     println(test_jac)
+     # println(jac)
+     # println(test_jac)
+
+     # Now perturb x1 and u2 by a lot. Update jac.
+     x1 += [1., 2.]
+     u2 += [4., 1., 5.]
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     nonlinear_eq_jacobian(z, x0, n_x, n_u, T, fx, fu, jac)
+
+     # Update test_jac.
+     test_jac[3:4, 4:5] = -fx(x1, u1)
+     test_jac[3:4, 6:8] = -fu(x1, u1) 
+     test_jac[5:6, 9:10] = -fx(x2, u2)
+     test_jac[5:6, 11:13] = -fu(x2, u2)
+     @test norm(jac - test_jac) < tol
+     # println(jac)
+     # println(test_jac)
  end
  
