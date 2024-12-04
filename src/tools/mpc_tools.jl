@@ -439,35 +439,35 @@ Compute the Jacobian of the nonlinear inequality vector.
 function nonlinear_eq_jacobian(z, x0, n_x, n_u, T, f_x, f_u, jac=nothing)
     new_jac = false
 
-    if nothing(jac)
+    if isnothing(jac)
         new_jac = true
         jac = zeros((T*n_x, T*(n_x + n_u)))
     end
 
     x_curr = x0
     for idx in 1:T
-        beg_u_col = (idx-1)*(n+m) + 1
-        end_u_col = (idx-1)*(n+m) + 1 + (m-1)
-        beg_x_col = (idx-1)*(n+m) + 1 + m
-        end_x_col = idx*(n+m)
+        beg_u_col = (idx-1)*(n_x + n_u) + 1
+        end_u_col = (idx-1)*(n_x + n_u) + 1 + (n_u-1)
+        beg_x_col = (idx-1)*(n_x + n_u) + 1 + n_u
+        end_x_col = idx*(n_x + n_u)
 
-        beg_x_row = (idx-1)*n + 1
-        end_x_row = idx*n
+        beg_x_row = (idx-1)*n_x + 1
+        end_x_row = idx*n_x
 
         u_curr = z[beg_u_col:end_u_col]
 
         jac[beg_x_row:end_x_row, beg_u_col:end_u_col] = -f_u(x_curr, u_curr)
         if new_jac
-            jac[beg_x_row:end_x_row, beg_x_col:end_x_col] = Matrix{Float64}(I, n, n)
-        end
-
-        if idx < T 
-            beg_x_next_row = idx*n + 1
-            end_x_next_row = (idx+1)*n
-            jac[beg_x_next_row:end_x_next_row, beg_x_col:end_x_col] = -f_x(x_curr, u_curr)
+            jac[beg_x_row:end_x_row, beg_x_col:end_x_col] = Matrix{Float64}(I, n_x, n_x)
         end
 
         x_curr = z[beg_x_col:end_x_col]
+        
+        if idx < T 
+            beg_x_next_row = idx*n_x + 1
+            end_x_next_row = (idx+1)*n_x
+            jac[beg_x_next_row:end_x_next_row, beg_x_col:end_x_col] = -f_x(x_curr, u_curr)
+        end
     end
 
     if new_jac

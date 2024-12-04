@@ -462,6 +462,22 @@ end
      @test norm(fx(x0, u0) - fx_hat) < tol
      @test norm(fu(x0, u0) - fu_hat) < tol
 
+     id = Matrix{Float64}(I, 2, 2)
+     test_jac = zeros((3*2, 3*(2+3)))
+     test_jac[1:2, 1:3] = -fu(x0, u0) 
+     test_jac[1:2, 4:5] = id
 
+     test_jac[3:4, 4:5] = -fx(x1, u1)
+     test_jac[3:4, 6:8] = -fu(x1, u1) 
+     test_jac[3:4, 9:10] = id 
+
+     test_jac[5:6, 9:10] = -fx(x2, u2)
+     test_jac[5:6, 11:13] = -fu(x2, u2)
+     test_jac[5:6, 14:15] = id
+
+     jac = nonlinear_eq_jacobian(z, x0, n_x, n_u, T, fx, fu)
+     @test norm(jac - test_jac) < tol
+     println(jac)
+     println(test_jac)
  end
  
