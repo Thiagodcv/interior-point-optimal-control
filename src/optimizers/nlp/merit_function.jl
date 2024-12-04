@@ -30,7 +30,7 @@ end
 
 
 """
-    dmerit_dz(z, s, mu, params, rho)
+    dmerit_dz(z, s, params, rho)
 
 Evaluate the gradient of the merit function with respect to z.
 
@@ -61,4 +61,31 @@ function dmerit_dz(z, s, params, rho)
     ineq_part = rho / norm(P*z - h + s) * transpose(P) * (P*z - h + s)
 
     return obj_part + eq_part + ineq_part
+end
+
+
+"""
+    dmerit_ds(s, mu, params, rho)
+
+Evaluate the gradient of the merit function with respect to s.
+
+# Arguments
+- `s::Array`: the slack variable.
+- `mu::Float64`: the barrier parameter.
+- `params::Dict{String, Array}`: the parameters of the NLP problem. Contains key-value pairs
+        - "P"::Array: the inequality constraint matrix,
+        - "h"::Array: the inequality constraint vector,
+- `rho::Float64`: the parameter of the merit function.
+
+# Returns
+- `Array`: the gradient of the merit function with respect to s.
+"""
+function dmerit_ds(s, mu, params, rho)
+    P = params["P"]
+    h = params["h"]
+
+    barrier_part = -mu ./ s 
+    ineq_part = rho / norm(P*z - h + s) * (P*z - h + s)
+    
+    return barrier_part + ineq_part
 end
