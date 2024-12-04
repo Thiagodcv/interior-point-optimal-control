@@ -445,6 +445,7 @@ function nonlinear_eq_jacobian(z, x0, n_x, n_u, T, f_x, f_u, jac=nothing)
     end
 
     x_curr = x0
+    u_curr = z[1:n_u]
     for idx in 1:T
         beg_u_col = (idx-1)*(n_x + n_u) + 1
         end_u_col = (idx-1)*(n_x + n_u) + 1 + (n_u-1)
@@ -454,16 +455,18 @@ function nonlinear_eq_jacobian(z, x0, n_x, n_u, T, f_x, f_u, jac=nothing)
         beg_x_row = (idx-1)*n_x + 1
         end_x_row = idx*n_x
 
-        u_curr = z[beg_u_col:end_u_col]
-
         jac[beg_x_row:end_x_row, beg_u_col:end_u_col] = -f_u(x_curr, u_curr)
         if new_jac
             jac[beg_x_row:end_x_row, beg_x_col:end_x_col] = Matrix{Float64}(I, n_x, n_x)
         end
-
-        x_curr = z[beg_x_col:end_x_col]
         
         if idx < T 
+            x_curr = z[beg_x_col:end_x_col]
+            
+            beg_u_next_col = idx*(n_x + n_u) + 1
+            end_u_next_col = idx*(n_x + n_u) + 1 + (n_u-1)
+            u_curr = z[beg_u_next_col:end_u_next_col]
+
             beg_x_next_row = idx*n_x + 1
             end_x_next_row = (idx+1)*n_x
             jac[beg_x_next_row:end_x_next_row, beg_x_col:end_x_col] = -f_x(x_curr, u_curr)
