@@ -397,5 +397,19 @@ end
      # println(constraint_vec)
      # println(expected_vec)
      @test norm(constraint_vec - expected_vec) < tol
+
+     x0 = [1.1; 2.2]
+     x1 = [2.2; 3.3]
+     x2 = [3.3; 4.4]
+     x3 = [4.4; 5.5]
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     nonlinear_eq_constraint(z, x0, n_x, n_u, T, f, constraint_vec)
+
+     expected_vec = x1 - f(x0, u0)
+     expected_vec = vcat(expected_vec, x2 - f(x1, u1))
+     expected_vec = vcat(expected_vec, x3 - f(x2, u2))
+     # println(constraint_vec)
+     # println(expected_vec)
+     @test norm(constraint_vec - expected_vec) < tol
  end
  
