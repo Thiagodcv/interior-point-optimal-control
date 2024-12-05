@@ -93,10 +93,50 @@ end
 
 
 """
-    armijo_linesearch(z, s, p_z, p_s, heta, alpha_s, rho, params)
+    armijo_linesearch(z, s, p_z, p_s, alpha_max, rho, params)
 
 Armijo linesearch over the primal and slack variables conducted on the merit function.
+
+# Arguments
+- `z::Array`: the primal variable.
+- `s::Array`: the slack variable.
+- `p_z::Array`: a step in the primal variable.
+- `p_s::Array`: a step in the slack variable.
+- `alpha_max::Float64`: the maximum step size to start linesearch.
+- `rho::Float64`: the parameter of the merit function.
+- `params::Dict{String, Array}`: the parameters of the NLP problem. Contains key-value pairs
+        - "H"::Array: the Hessian of the NLP,
+        - "g"::Array: the linear term of the NLP,
+        - "P"::Array: the inequality constraint matrix,
+        - "h"::Array: the inequality constraint vector,
+        - "eq_vec"::Array: the equality constraint residual vector evaluated at z.
+        - "eq_jac"::Array: the Jacobian of the equality constraint residual vector evaluated at z.
+
+# Returns
+- `Float64`: a step size.
 """
-function armijo_linesearch(z, s, p_z, p_s, heta, alpha_max, rho, params)
-    return -1
+function armijo_linesearch(z, s, p_z, p_s, alpha_max, rho, params)
+    max_iter = 100
+    heta = 1e^(-4)  # in (0, 1). Slope dampener. 
+    c = 0.5  # in (0, 1). Contraction factor for decreasing step length.
+    mu = 1  # how to set this?
+
+    alpha = alpha_max
+    merit_curr = merit_func(z, s, mu, params, rho)
+    d_merit = dmerit_dz(z, s, params, rho) * p_z + dmerit_ds(z, s, mu, params, rho) * p_s
+
+    for iter in 1:max_iter
+        z_next = z + alpha * p_z
+        s_next = s + alpha * p_s
+
+        merit_next = merit_func(z_next, s_next, mu, params, rho)
+
+        if merit_next <= merit_curr + heta * alpha * d_merit
+            return alpha
+        end
+        
+        alpha = c * alpha
+    end
+
+    error("Armijo line search did not converge within max_iters = ", max_iters, " iterations.")
 end
