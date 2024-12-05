@@ -18,11 +18,15 @@ function damped_bfgs_update(z_curr, z_next, eq_jac_curr, eq_jac_next, H, nu, B)
 
     quad_form = dz' * B * dz
     if transpose(dz) * y >= 0.2*quad_form
+        # println(1)
         theta = 1
     else
+        # println(2)
         theta = (0.8*quad_form)/(quad_form - transpose(dz) * y)
     end
     
     r = theta*y + (1-theta)*B*dz
-    B = B - (B*dz * transpose(B*dz))/quad_form + (r * transpose(r))/(transpose(dz) * r)
+    B_next = B - (B*dz * transpose(B*dz))/quad_form + (r * transpose(r))/(transpose(dz) * r)
+
+    return B_next
 end
