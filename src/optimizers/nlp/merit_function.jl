@@ -93,7 +93,7 @@ end
 
 
 """
-    armijo_linesearch(z, s, p_z, p_s, alpha_max, rho, params)
+    armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, params, dd_L)
 
 Armijo linesearch over the primal and slack variables conducted on the merit function.
 
@@ -103,7 +103,7 @@ Armijo linesearch over the primal and slack variables conducted on the merit fun
 - `p_z::Array`: a step in the primal variable.
 - `p_s::Array`: a step in the slack variable.
 - `alpha_max::Float64`: the maximum step size to start linesearch.
-- `rho::Float64`: the parameter of the merit function.
+- `mu::Float64`: the barrier parameter.
 - `params::Dict{String, Array}`: the parameters of the NLP problem. Contains key-value pairs
         - "H"::Array: the Hessian of the NLP,
         - "g"::Array: the linear term of the NLP,
@@ -111,15 +111,16 @@ Armijo linesearch over the primal and slack variables conducted on the merit fun
         - "h"::Array: the inequality constraint vector,
         - "eq_vec"::Array: the equality constraint residual vector evaluated at z.
         - "eq_jac"::Array: the Jacobian of the equality constraint residual vector evaluated at z.
+- `dd_L:Array`: the Hessian of the Lagrangian, approximated or exact. Assumed to be positive definite.
 
 # Returns
 - `Float64`: a step size.
 """
-function armijo_linesearch(z, s, p_z, p_s, alpha_max, rho, params)
+function armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, params, dd_L)
     max_iter = 100
     heta = 1e^(-4)  # in (0, 1). Slope dampener. 
     c = 0.5  # in (0, 1). Contraction factor for decreasing step length.
-    mu = 1  # how to set this?
+    rho = compute_rho(z, p_z, params, dd_L)  # merit function parameter
 
     alpha = alpha_max
     merit_curr = merit_func(z, s, mu, params, rho)
@@ -139,4 +140,39 @@ function armijo_linesearch(z, s, p_z, p_s, alpha_max, rho, params)
     end
 
     error("Armijo line search did not converge within max_iters = ", max_iters, " iterations.")
+end
+
+
+"""
+Computes the parameter for the merit function assuming the first block
+diagonal of the KKT matrix is positive definite. Based off of (Nocedal, 18.36).
+
+NOTE: this function only looks at the primal variable and not the slack variable. 
+This may cause issues.
+
+# Arguments
+- `z::Array`: the primal variable.
+- `p_z::Array`: a step in the primal variable.
+- `params::Dict{String, Array}`: the parameters of the NLP problem. Contains key-value pairs
+        - "H"::Array: the Hessian of the NLP,
+        - "g"::Array: the linear term of the NLP,
+        - "P"::Array: the inequality constraint matrix,
+        - "h"::Array: the inequality constraint vector,
+        - "eq_vec"::Array: the equality constraint residual vector evaluated at z.
+        - "eq_jac"::Array: the Jacobian of the equality constraint residual vector evaluated at z.
+- `dd_L:Array`: the Hessian of the Lagrangian, approximated or exact. Assumed to be positive definite.
+
+# Returns
+- `Float64`: the merit function parameter.
+"""
+function compute_rho(z, p_z, params, dd_L)
+    df = params["H"]*z + params["g"]
+    sigma = 1
+    lb_param = 0.5  # Not too sure what to set this to.
+
+    rho_lb = transpose(df) * p_z + (sigma/2)*transpose(p_z) * dd_L * p_z
+    rho_lb = rho_lb/((1-lb_param)*norm(param["eq_vec"]))
+    rho = min((1.01)*rho_lb, 0.999)
+
+    return rho
 end
