@@ -90,3 +90,13 @@ function dmerit_ds(z, s, mu, params, rho)
 
     return barrier_part + ineq_part
 end
+
+
+"""
+    armijo_linesearch(z, s, p_z, p_s, heta, alpha_s, rho, params)
+
+Armijo linesearch over the primal and slack variables conducted on the merit function.
+"""
+function armijo_linesearch(z, s, p_z, p_s, heta, alpha_max, rho, params)
+    return -1
+end
