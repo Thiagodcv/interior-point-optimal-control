@@ -65,11 +65,12 @@ end
 
 
 """
-    dmerit_ds(s, mu, params, rho)
+    dmerit_ds(z, s, mu, params, rho)
 
 Evaluate the gradient of the merit function with respect to s.
 
 # Arguments
+- `z::Array`: the primal variable.
 - `s::Array`: the slack variable.
 - `mu::Float64`: the barrier parameter.
 - `params::Dict{String, Array}`: the parameters of the NLP problem. Contains key-value pairs
@@ -80,7 +81,7 @@ Evaluate the gradient of the merit function with respect to s.
 # Returns
 - `Array`: the gradient of the merit function with respect to s.
 """
-function dmerit_ds(s, mu, params, rho)
+function dmerit_ds(z, s, mu, params, rho)
     P = params["P"]
     h = params["h"]
 

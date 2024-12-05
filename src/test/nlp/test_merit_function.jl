@@ -60,13 +60,23 @@ using Test
     dmerit_dz_test = dmerit_dz(z, s, params, rho)
 
     tol = 1e-5
-    println("true: ", dmerit_dz_true)
-    println("test: ", dmerit_dz_test)
+    # println("true: ", dmerit_dz_true)
+    # println("test: ", dmerit_dz_test)
     @test norm(dmerit_dz_true - dmerit_dz_test) < tol
 
-    # s1 = s + [epsilon; 0.]
-    # mer_s1 = merit_func(z, s1, mu, params, rho)
+    s1 = s + [epsilon; 0.]
+    mer_s1 = merit_func(z, s1, mu, params, rho)
 
-    # s2 = s + [epsilon; 0.]
-    # mer_s2 = merit_func(z, s2, mu, params, rho)
+    s2 = s + [0.; epsilon]
+    mer_s2 = merit_func(z, s2, mu, params, rho)
+
+    dmerit_ds1 = (mer_s1 - mer_orig) / epsilon
+    dmerit_ds2 = (mer_s2 - mer_orig) / epsilon
+
+    dmerit_ds_true = [dmerit_ds1; dmerit_ds2]
+    dmerit_ds_test = dmerit_ds(z, s, mu, params, rho)
+
+    # println("true: ", dmerit_ds_true)
+    # println("test: ", dmerit_ds_test)
+    @test norm(dmerit_ds_true - dmerit_ds_test) < tol
 end
