@@ -50,7 +50,7 @@ Evaluate the gradient of the merit function with respect to z.
 - `Array`: the gradient of the merit function with respect to z.
 """
 function dmerit_dz(z, s, params, rho)
-    obj_part = params["H"] * z + params["g"] 
+    obj_part = 2*params["H"] * z + params["g"] 
 
     eq_vec = params["eq_vec"]
     eq_jac = params["eq_jac"]
@@ -86,6 +86,6 @@ function dmerit_ds(s, mu, params, rho)
 
     barrier_part = -mu ./ s 
     ineq_part = rho / norm(P*z - h + s) * (P*z - h + s)
-    
+
     return barrier_part + ineq_part
 end

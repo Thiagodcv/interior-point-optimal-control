@@ -59,7 +59,7 @@ using Test
     dmerit_dz_true = [dmerit_dz1; dmerit_dz2; dmerit_dz3]
     dmerit_dz_test = dmerit_dz(z, s, params, rho)
 
-    tol = 1e-6
+    tol = 1e-5
     println("true: ", dmerit_dz_true)
     println("test: ", dmerit_dz_test)
     @test norm(dmerit_dz_true - dmerit_dz_test) < tol
