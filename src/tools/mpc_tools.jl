@@ -420,7 +420,7 @@ end
 """
     nonlinear_eq_jacobian(z, x0, n_x, n_u, T, f_x, f_u, jac=nothing)
 
-Compute the Jacobian of the nonlinear inequality vector.
+Compute the Jacobian of the nonlinear equality vector.
 
 # Arguments
 - `z::Array`: the primal variable in an NLP problem.
