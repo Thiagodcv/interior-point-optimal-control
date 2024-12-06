@@ -2,7 +2,7 @@ using LinearAlgebra
 
 
 """
-    compute_kkt_residual(z, lambda, nu, s, param, res_mat)
+    kkt_residual_nlp(z, lambda, nu, s, param, res_mat)
 
 Computes the residual vector which encodes the KKT conditions of the NLP.
 
@@ -28,7 +28,7 @@ NOTE: this function also assumes the KKT matrix is made symmetrical.
 # Returns
 - `Array`: the residual vector. Only returns if argument for res_mat not specified by user.
 """
-function compute_kkt_residual(z, lambda, nu, s, param, res_mat=nothing)
+function kkt_residual_nlp(z, lambda, nu, s, param, res_mat=nothing)
     n_z = size(z)[1]
     n_lam = size(lambda)[1]
     n_nu = size(nu)[1]
@@ -51,7 +51,7 @@ end
 
 
 """
-    compute_kkt_jacobian(lambda, s, B, param, jac)
+    kkt_jacobian_nlp(lambda, s, B, param, jac)
 
 Computes the Jacobian of the residual vector which encodes the KKT conditions of the NLP.
 
@@ -70,7 +70,7 @@ NOTE: matrix is assumed to have been made symmetrical by multipling the second b
 # Returns
 - `Array`: the Jacobian matrix. Only returns if argument for jac not specified by user.
 """
-function compute_kkt_jacobian(lambda, s, B, param, jac=nothing)
+function kkt_jacobian_nlp(lambda, s, B, param, jac=nothing)
     n_z = size(param["B"])[1]
     n_lam = size(lambda)[1]
     n_nu = size(param_dict["eq_jac"])[1]
@@ -106,4 +106,36 @@ function compute_kkt_jacobian(lambda, s, B, param, jac=nothing)
     if new_jac
         return jac
     end
+end
+
+
+"""
+    centering_plus_corrector_dir_nlp(kkt_jac, d_s_aff, d_lambda_aff, sigma, s, mu, n, p, m)
+
+Compute centering-plus-corrector directions. 
+
+NOTE: Assumes KKT matrix has been made symmetric.
+
+# Arguments
+- `kkt_jac::Array`: the (n+2p+m,n+2p+m) Jacobian of the residual vector described above.
+- `d_s_aff::Array`: the affine scaling direction for the slack vector (p,) associated with the inequality constraint.
+- `d_p_aff::Array`: the affine scaling direction for the dual vector (p,) associated with the inequality constraint.
+- `s::Array`: the slack variable.
+- `mu::Float64`: the barrier parameter.
+- `n::Integer64`: size of the primal variable x.
+- `p::Integer64`: number of inequality constraints.
+- `m::Integer64`: number of equality constraints.
+
+# Returns
+- `Dict{String, Array}`: the centering-plus-corrector directions for each primal and dual variable. 
+"""
+function centering_plus_corrector_dir_nlp(kkt_jac, d_s_aff, d_lambda_aff, sigma, s, mu, n, p, m)
+    cc_vec = zeros((n+2*p+m,))
+    cc_vec[n+1:n+p] = Diagonal(1 ./ s) * (sigma * mu * ones((p,)) - Diagonal(d_s_aff) * d_lambda_aff)
+    cc_step = kkt_jac \ cc_vec
+    d_x_cc = cc_step[1:n]
+    d_s_cc = cc_step[n+1:n+p]
+    d_lambda_cc = cc_step[n+p+1:n+2*p]
+    d_nu_cc = cc_step[n+2*p+1:n+2*p+m]
+    return Dict("x" => d_x_cc, "s" => d_s_cc, "lambda" => d_lambda_cc, "nu" => d_nu_cc)
 end
