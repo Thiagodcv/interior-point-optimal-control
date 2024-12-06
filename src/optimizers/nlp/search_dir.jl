@@ -71,9 +71,9 @@ NOTE: matrix is assumed to have been made symmetrical by multipling the second b
 - `Array`: the Jacobian matrix. Only returns if argument for jac not specified by user.
 """
 function kkt_jacobian_nlp(lambda, s, B, param, jac=nothing)
-    n_z = size(param["B"])[1]
+    n_z = size(B)[1]
     n_lam = size(lambda)[1]
-    n_nu = size(param_dict["eq_jac"])[1]
+    n_nu = size(param["eq_jac"])[1]
 
     new_jac = false
     if isnothing(jac)
@@ -81,14 +81,14 @@ function kkt_jacobian_nlp(lambda, s, B, param, jac=nothing)
         jac = zeros((n_z + 2*n_lam + n_nu, n_z + 2*n_lam + n_nu))
     
         # First row of block matrices
-        jac[1:n_z, n_z+n_lam+1:n+2*n_lam] = transpose(param["P"]) 
+        jac[1:n_z, n_z+n_lam+1:n_z+2*n_lam] = transpose(param["P"]) 
 
         # Second row of block matrices
-        jac[n_z+1:n_z+n_lam, n_z+n_lam+1:n_z+2*n_lam] = Matrix{Float64}(I, p, p)
+        jac[n_z+1:n_z+n_lam, n_z+n_lam+1:n_z+2*n_lam] = Matrix{Float64}(I, n_lam, n_lam)
 
         # Third row of block matrices
         jac[n_z+n_lam+1:n_z+2*n_lam, 1:n_z] = param["P"]
-        jac[n_z+n_lam+1:n_z+2*n_lam, n_z+1:n_z+n_lam] = Matrix{Float64}(I, p, p)
+        jac[n_z+n_lam+1:n_z+2*n_lam, n_z+1:n_z+n_lam] = Matrix{Float64}(I, n_lam, n_lam)
     end
 
     # Left for last as these change per iteration:
