@@ -72,10 +72,66 @@ include("../../optimizers/nlp/optimizer.jl")
 
     ret = pdip_nlp(param, eq_consts, z_init)
     ret_separate = separate_solution(ret["z"], n, m, u_latest, T)
-    
+
     println("iters: ", ret["iters"])
     # println("solution: ", ret["x"])
     println("state solution: ", ret_separate["x"])
     println("input solution: ", ret_separate["u"])
     println("diff input solution: ", ret_separate["du"])
+end
+
+
+@testset "test_pendulum" begin
+    """
+    Test to see if NLP optimizer can solve the pendulum problem.
+    """
+    g = 9.8
+    dt = 0.01
+
+    # The continuous-time dynamics function
+    function f(x, u)
+        return [x[2]; -g*sin(x[1]) - x[2] + u]
+    end
+
+    # Jacobian of f w.r.t. x
+    function f_x(x, u)
+        return [0. 1.; -g*cos(x[1]) -1.]
+    end
+
+    # Jacobian of f w.r.t. u
+    function f_u(x, u)
+        return [0.; 1.]
+    end
+
+    # The discrete-time dynamics function
+    function h(x, u)
+        return x + f(x, u)*dt
+    end
+
+    # Jacobian of h w.r.t. x
+    function h_x(x, u)
+        return [1. 0.; 0. 1.] + f_x(x, u)*dt
+    end
+
+    # Jacobian of h w.r.t. u
+    function h_u(x, u)
+        return f_u(x, u)*dt
+    end
+
+    n_x = 2
+    n_u = 1
+    T = 10
+    x0 = [0.2; 0.2]
+
+    constraint_vec = zeros((T*n_x,))
+    jac = zeros((T*n_x, T*(n_x + n_u)))
+
+    function eq_const_func(z)
+        return nonlinear_eq_constraint(z, x0, n_x, n_u, T, h, constraint_vec)
+    end
+
+    function eq_jac_func(z)
+        return nonlinear_eq_jacobian(z, x0, n_x, n_u, T, h_x, h_u, jac)
+    end
+
 end
