@@ -4,7 +4,7 @@ using LinearAlgebra
 """
     compute_kkt_residual(z, lambda, nu, s, param, res_mat)
 
-Computes the residual vector which encodes the KKT conditions of the NLP program.
+Computes the residual vector which encodes the KKT conditions of the NLP.
 
 NOTE: does NOT include the centering parameter nor the Mehrotra correction. Those are added on
 by different functions later.
@@ -49,3 +49,61 @@ function compute_kkt_residual(z, lambda, nu, s, param, res_mat=nothing)
     end
 end
 
+
+"""
+    compute_kkt_jacobian(lambda, s, B, param, jac)
+
+Computes the Jacobian of the residual vector which encodes the KKT conditions of the NLP.
+
+NOTE: does NOT include the centering parameter.
+NOTE: matrix is assumed to have been made symmetrical by multipling the second block row by inverse(S).
+
+# Arguments
+- `lambda::Array`: the current dual iterate for the inequality constraint. Strictly positive.
+- `s::Array`: the current slack variable iterate for the inequality constraint. Strictly positive.
+- `B::Array`: (an approximation of) the Hessian of the Lagrangian.
+- `param::Dict{String, Array}`: the parameters which define the QP problem. Contains key-value pairs
+        - "P"::Array: the inequality constraint matrix,
+        - "eq_jac"::Array: the Jacobian of the equality constraint residual vector evaluated at z.
+- `jac::Array`: an array which was output by this very function, but which will be updated with new iterates.
+
+# Returns
+- `Array`: the Jacobian matrix. Only returns if argument for jac not specified by user.
+"""
+function compute_kkt_jacobian(lambda, s, B, param, jac=nothing)
+    n_z = size(param["B"])[1]
+    n_lam = size(lambda)[1]
+    n_nu = size(param_dict["eq_jac"])[1]
+
+    new_jac = false
+    if isnothing(jac)
+        new_jac = true
+        jac = zeros((n_z + 2*n_lam + n_nu, n_z + 2*n_lam + n_nu))
+    
+        # First row of block matrices
+        jac[1:n_z, n_z+n_lam+1:n+2*n_lam] = transpose(param["P"]) 
+
+        # Second row of block matrices
+        jac[n_z+1:n_z+n_lam, n_z+n_lam+1:n_z+2*n_lam] = Matrix{Float64}(I, p, p)
+
+        # Third row of block matrices
+        jac[n_z+n_lam+1:n_z+2*n_lam, 1:n_z] = param["P"]
+        jac[n_z+n_lam+1:n_z+2*n_lam, n_z+1:n_z+n_lam] = Matrix{Float64}(I, p, p)
+    end
+
+    # Left for last as these change per iteration:
+
+    # First row of block matrices
+    jac[1:n_z, 1:n_z] = B
+    jac[1:n_z, n_z+2*n_lam+1:n_z+2*n_lam+n_nu] = transpose(param["eq_jac"]) 
+
+    # Second row of block matrices. 
+    jac[n_z+1:n_z+n_lam, n_z+1:n_z+n_lam] = Diagonal(1 ./ s) * Diagonal(lambda)
+    
+    # Fourth row of block matrices
+    jac[n_z+2*n_lam+1:n_z+2*n_lam+n_nu, 1:n_z] = param["eq_jac"]
+
+    if new_jac
+        return jac
+    end
+end
