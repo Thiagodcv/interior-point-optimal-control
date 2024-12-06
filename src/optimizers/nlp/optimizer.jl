@@ -52,7 +52,7 @@ function pdip_nlp(param, eq_consts, z0)
 
     for iter in 1:max_iters
         if norm(kkt_res) < epsilon
-            return Dict("x" => x, "s" => s, "lambda" => lambda, "nu" => nu, "iters" => iter)
+            return Dict("z" => z, "s" => s, "lambda" => lambda, "nu" => nu, "iters" => iter)
         end
 
         aff_dir = compute_affine_scaling_dir(kkt_res, kkt_jac, n_z, n_lam, n_nu)
