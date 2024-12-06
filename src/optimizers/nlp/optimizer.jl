@@ -1,5 +1,6 @@
 include("./search_dir.jl")
 include("../qp/search_dir.jl")
+include("../qp/optimizer.jl")
 
 
 """
@@ -63,8 +64,26 @@ function pdip_nlp(param, eq_consts, z0)
 
         cc_dir = centering_plus_corrector_dir_nlp(kkt_jac, aff_dir["s"], aff_dir["lambda"], sigma, s, mu, n_z, n_lam, n_nu)
 
-        # Update primal and dual iterates
+        # Update approximate Hessian using BFGS
+        alpha = primal_dual_step(s, lambda, aff_dir["s"], aff_dir["lambda"])
+        z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
+        eq_jac_next = eq_consts["jac"](z_next)
+        B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
 
+        # Update iterates
+        z = z_next
+        s = s + alpha * (aff_dir["s"] + cc_dir["s"])
+        lambda = lambda + alpha * (aff_dir["lambda"] + cc_dir["lambda"])
+        nu = nu + alpha * (aff_dir["nu"] + cc_dir["nu"])
 
+        # Update equality constraints
+        param["eq_vec"] = eq_consts["vec"](z_next)
+        param["eq_jac"] = eq_jac_next
+
+        # Update KKT residual and its Jacobian
+        kkt_residual_nlp(z, lambda, nu, s, param, kkt_res)
+        kkt_jacobian_nlp(lambda, s, B, param, kkt_jac)
     end
+
+    error("Did not converge within max_iters = ", max_iters, " iterations.")
 end
