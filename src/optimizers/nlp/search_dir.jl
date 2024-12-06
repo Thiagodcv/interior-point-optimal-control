@@ -40,7 +40,7 @@ function kkt_residual_nlp(z, lambda, nu, s, param, res_mat=nothing)
     end
 
     res_mat[1:n_z] = param["H"]*z + param["g"] + transpose(param["P"])*lambda + transpose(param["eq_jac"])*nu
-    res_mat[n_z+1:n+lam] = lambda  # Assumes the KKT matrix is made symmetric.
+    res_mat[n_z+1:n_z+n_lam] = lambda  # Assumes the KKT matrix is made symmetric.
     res_mat[n_z+n_lam+1:n_z+2*n_lam] = param["P"]*z - param["h"] + s
     res_mat[n_z+2*n_lam+1:n_z+2*n_lam+n_nu] = param["eq_vec"]
 
