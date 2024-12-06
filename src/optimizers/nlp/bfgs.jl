@@ -24,9 +24,10 @@ function damped_bfgs_update(z_curr, z_next, eq_jac_curr, eq_jac_next, H, nu, B)
         # println(2)
         theta = (0.8*quad_form)/(quad_form - transpose(dz) * y)
     end
-    
+
     r = theta*y + (1-theta)*B*dz
     B_next = B - (B*dz * transpose(B*dz))/quad_form + (r * transpose(r))/(transpose(dz) * r)
+    println("diff: ", sum(abs.(B_next - B)))
 
     return B_next
 end

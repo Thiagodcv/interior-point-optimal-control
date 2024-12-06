@@ -40,7 +40,8 @@ function kkt_residual_nlp(z, lambda, nu, s, param, res_mat=nothing)
     end
 
     res_mat[1:n_z] = param["H"]*z + param["g"] + transpose(param["P"])*lambda + transpose(param["eq_jac"])*nu
-    res_mat[n_z+1:n_z+n_lam] = lambda  # Assumes the KKT matrix is made symmetric.
+    # res_mat[n_z+1:n_z+n_lam] = lambda  # Assumes the KKT matrix is made symmetric.
+    res_mat[n_z+1:n_z+n_lam] = Diagonal(s) * lambda 
     res_mat[n_z+n_lam+1:n_z+2*n_lam] = param["P"]*z - param["h"] + s
     res_mat[n_z+2*n_lam+1:n_z+2*n_lam+n_nu] = param["eq_vec"]
 
@@ -84,7 +85,7 @@ function kkt_jacobian_nlp(lambda, s, B, param, jac=nothing)
         jac[1:n_z, n_z+n_lam+1:n_z+2*n_lam] = transpose(param["P"]) 
 
         # Second row of block matrices
-        jac[n_z+1:n_z+n_lam, n_z+n_lam+1:n_z+2*n_lam] = Matrix{Float64}(I, n_lam, n_lam)
+        # jac[n_z+1:n_z+n_lam, n_z+n_lam+1:n_z+2*n_lam] = Matrix{Float64}(I, n_lam, n_lam)
 
         # Third row of block matrices
         jac[n_z+n_lam+1:n_z+2*n_lam, 1:n_z] = param["P"]
@@ -98,7 +99,9 @@ function kkt_jacobian_nlp(lambda, s, B, param, jac=nothing)
     jac[1:n_z, n_z+2*n_lam+1:n_z+2*n_lam+n_nu] = transpose(param["eq_jac"]) 
 
     # Second row of block matrices. 
-    jac[n_z+1:n_z+n_lam, n_z+1:n_z+n_lam] = Diagonal(1 ./ s) * Diagonal(lambda)
+    # jac[n_z+1:n_z+n_lam, n_z+1:n_z+n_lam] = Diagonal(1 ./ s) * Diagonal(lambda)
+    jac[n_z+1:n_z+n_lam, n_z+1:n_z+n_lam] = Diagonal(lambda)
+    jac[n_z+1:n_z+n_lam, n_z+n_lam+1:n_z+2*n_lam] = Diagonal(s)
     
     # Fourth row of block matrices
     jac[n_z+2*n_lam+1:n_z+2*n_lam+n_nu, 1:n_z] = param["eq_jac"]
@@ -131,7 +134,8 @@ NOTE: Assumes KKT matrix has been made symmetric.
 """
 function centering_plus_corrector_dir_nlp(kkt_jac, d_s_aff, d_lambda_aff, sigma, s, mu, n, p, m)
     cc_vec = zeros((n+2*p+m,))
-    cc_vec[n+1:n+p] = Diagonal(1 ./ s) * (sigma * mu * ones((p,)) - Diagonal(d_s_aff) * d_lambda_aff)
+    # cc_vec[n+1:n+p] = Diagonal(1 ./ s) * (sigma * mu * ones((p,)) - Diagonal(d_s_aff) * d_lambda_aff)
+    cc_vec[n+1:n+p] = sigma * mu * ones((p,)) - Diagonal(d_s_aff) * d_lambda_aff
     cc_step = kkt_jac \ cc_vec
     d_x_cc = cc_step[1:n]
     d_s_cc = cc_step[n+1:n+p]

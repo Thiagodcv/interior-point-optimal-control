@@ -1,4 +1,5 @@
 include("./search_dir.jl")
+include("./bfgs.jl")
 include("../qp/search_dir.jl")
 include("../qp/optimizer.jl")
 
@@ -33,7 +34,7 @@ function pdip_nlp(param, eq_consts, z0)
 
     # Size of primal variable and constraints
     n_z = size(z0)[1]
-    n_lam = size(P)[1]
+    n_lam = size(param["P"])[1]
     n_nu = size(param["eq_vec"])[1]
 
     # Set initial primal and dual iterates
@@ -69,6 +70,11 @@ function pdip_nlp(param, eq_consts, z0)
         z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
         eq_jac_next = eq_consts["jac"](z_next)
         B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
+
+        # println("min_abs_eval(kkt_jac): ", minimum(abs.(eigvals(kkt_jac))))
+        # println("min_eval(B): ", minimum(eigvals(B)))
+        # println("min Sigma: ", minimum(Diagonal(1 ./ s) * lambda))
+        println("norm(kkt_res): ", norm(kkt_res))
 
         # Update iterates
         z = z_next
