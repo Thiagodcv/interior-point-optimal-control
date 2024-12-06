@@ -38,6 +38,26 @@ using Test
 
     tol = 1e-6
     @test norm(sol - res_vec) < tol
+
+    z = [3., 3., -3.]
+    s = [0.5; 3.]
+    lambda = [1.6; 5.7]
+    nu = [1.; -4.; 3.4]
+    eq_vec = [1.6; -0.4; -0.2]
+    eq_jac = [-1. 2. 3.;
+              5. 7. 6.;
+              -8. 3. 6.]
+
+    sol[1:3] = H*z + g + transpose(P)*lambda + transpose(eq_jac)*nu 
+    sol[4:5] = lambda
+    sol[6:7] = P*z - h + s 
+    sol[8:10] = eq_vec
+
+    param["eq_vec"] = eq_vec
+    param["eq_jac"] = eq_jac
+
+    kkt_residual_nlp(z, lambda, nu, s, param, res_vec)
+    @test norm(sol - res_vec) < tol
 end
 
 
@@ -87,5 +107,21 @@ end
     jac = kkt_jacobian_nlp(lambda, s, B, param)
 
     tol = 1e-6
+    @test norm(sol - jac) < tol
+
+    s = [3.; 6.]
+    lambda = [1.; 5.]
+    param["eq_vec"] = [1.; -0.4; 0.2]
+    param["eq_jac"] = [-1. 2. 3.;
+                        5. 7. 6.; 
+                        8.7 -3. 6.]
+    B = 0.5*Matrix{Float64}(I, 3, 3)
+
+    sol[1:3, 1:3] = B
+    sol[1:3, 8:10] = transpose(param["eq_jac"])
+    sol[4:5, 4:5] = Diagonal(1 ./ s) * Diagonal(lambda)
+    sol[8:10, 1:3] = param["eq_jac"]
+
+    kkt_jacobian_nlp(lambda, s, B, param, jac)
     @test norm(sol - jac) < tol
 end
