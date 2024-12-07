@@ -86,18 +86,19 @@ include("../../optimizers/nlp/optimizer.jl")
     Test to see if NLP optimizer can solve the pendulum problem.
     """
     # initial state, the latest input, and the time horizon
-    x0 = [pi/2; 0.2]
+    x0 = [pi; 0.]
     u_latest = [0.]
-    T = 30
+    T = 20
     n_x = 2
     n_u = 1
 
     # Cost parameters
-    d = [0; 0]
+    d = [pi; 0]
+    c = 2.
     cost_dict = Dict()
-    cost_dict["Q"] = 10*Matrix{Float64}(I, n_x, n_x)
-    cost_dict["q"] = -2*d
-    cost_dict["R"] = 0.01*Matrix{Float64}(I, n_u, n_u)
+    cost_dict["Q"] = c*Matrix{Float64}(I, n_x, n_x)
+    cost_dict["q"] = -2*c*d
+    cost_dict["R"] = 0.1*Matrix{Float64}(I, n_u, n_u)
     cost_dict["r"] = zeros((n_u,))
     cost_dict["S"] = cost_dict["R"]
     cost_dict["Q_T"] = cost_dict["Q"]
@@ -109,10 +110,10 @@ include("../../optimizers/nlp/optimizer.jl")
     limit_dict["x_ub"] = [big_num; big_num]
     limit_dict["x_lb"] = -limit_dict["x_ub"]
 
-    limit_dict["u_ub"] = [2.]
+    limit_dict["u_ub"] = [big_num]
     limit_dict["u_lb"] = -limit_dict["u_ub"]
 
-    limit_dict["du_ub"] = [2.]
+    limit_dict["du_ub"] = [big_num]
     limit_dict["du_lb"] = -limit_dict["du_ub"]
 
     limit_dict["x_T_ub"] = [big_num; big_num]
