@@ -133,7 +133,7 @@ include("../../optimizers/nlp/optimizer.jl")
     param["P"] = qp_dict["G"]
     param["h"] = qp_dict["h"]
 
-    g = 9.8
+    g = 9.8  # nlp diverges for higher than 9.835
     dt = 0.1
 
     # The continuous-time dynamics function
