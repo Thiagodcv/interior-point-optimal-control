@@ -86,16 +86,16 @@ include("../../optimizers/nlp/optimizer.jl")
     Test to see if NLP optimizer can solve the pendulum problem.
     """
     # initial state, the latest input, and the time horizon
-    x0 = [0.2; 0.2]
+    x0 = [pi/2; 0.2]
     u_latest = [0.]
-    T = 20
+    T = 30
     n_x = 2
     n_u = 1
 
     # Cost parameters
     d = [0; 0]
     cost_dict = Dict()
-    cost_dict["Q"] = Matrix{Float64}(I, n_x, n_x)
+    cost_dict["Q"] = 10*Matrix{Float64}(I, n_x, n_x)
     cost_dict["q"] = -2*d
     cost_dict["R"] = 0.01*Matrix{Float64}(I, n_u, n_u)
     cost_dict["r"] = zeros((n_u,))
@@ -109,10 +109,10 @@ include("../../optimizers/nlp/optimizer.jl")
     limit_dict["x_ub"] = [big_num; big_num]
     limit_dict["x_lb"] = -limit_dict["x_ub"]
 
-    limit_dict["u_ub"] = [big_num]
+    limit_dict["u_ub"] = [2.]
     limit_dict["u_lb"] = -limit_dict["u_ub"]
 
-    limit_dict["du_ub"] = [big_num]
+    limit_dict["du_ub"] = [2.]
     limit_dict["du_lb"] = -limit_dict["du_ub"]
 
     limit_dict["x_T_ub"] = [big_num; big_num]
@@ -134,11 +134,11 @@ include("../../optimizers/nlp/optimizer.jl")
     param["h"] = qp_dict["h"]
 
     g = 9.8
-    dt = 0.01
+    dt = 0.1
 
     # The continuous-time dynamics function
     function f(x, u)
-        return [x[2]; -g*sin(x[1]) - x[2] + u]
+        return [x[2]; -g*sin(x[1]) - x[2] + u[1]]
     end
 
     # Jacobian of f w.r.t. x
@@ -166,22 +166,22 @@ include("../../optimizers/nlp/optimizer.jl")
         return f_u(x, u)*dt
     end
 
-    constraint_vec = zeros((T*n_x,))
-    jac = zeros((T*n_x, T*(n_x + n_u)))
+    # constraint_vec = zeros((T*n_x,))
+    # jac = zeros((T*n_x, T*(n_x + n_u)))
 
     function eq_vec(z)
-        return nonlinear_eq_constraint(z, x0, n_x, n_u, T, h, constraint_vec)
+        return nonlinear_eq_constraint(z, x0, n_x, n_u, T, h)
     end
 
     function eq_jac(z)
-        return nonlinear_eq_jacobian(z, x0, n_x, n_u, T, h_x, h_u, jac)
+        return nonlinear_eq_jacobian(z, x0, n_x, n_u, T, h_x, h_u)
     end
 
     eq_consts = Dict("vec" => eq_vec, "jac" => eq_jac)
     z_init = zeros((T*(n_x+n_u),))
 
     ret = pdip_nlp(param, eq_consts, z_init)
-    ret_separate = separate_solution(ret["z"], n, m, u_latest, T)
+    ret_separate = separate_solution(ret["z"], n_x, n_u, u_latest, T)
 
     println("iters: ", ret["iters"])
     # println("solution: ", ret["x"])

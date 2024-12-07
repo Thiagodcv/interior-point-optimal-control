@@ -25,7 +25,7 @@ is specifically tailored to optimal control problems.
 - `Dict{String, Array}`: primal dual solution and optimization details.
 """
 function pdip_nlp(param, eq_consts, z0)
-    epsilon = 1e-7
+    epsilon = 1e-8
     max_iters = 100
 
     # Evaluate equality constraints at z0
