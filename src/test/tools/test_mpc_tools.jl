@@ -1,5 +1,5 @@
-include("../examples/mpc_tools.jl")
-include("../optimizer/optimizer.jl")
+include("../../tools/mpc_tools.jl")
+include("../../optimizers/qp/optimizer.jl")
 
 
 @testset "test_mpc_to_qp_hessian" begin
@@ -363,3 +363,136 @@ end
     println("input solution: ", ret_separate["u"])
     println("diff input solution: ", ret_separate["du"])
 end
+
+
+@testset "test_nonlinear_eq_constraint" begin
+     """
+     Test to see if nonlinear_eq_constraint returns the correct answer.
+     """
+     x0 = [1.; 2.]
+     x1 = [2.; 3.]
+     x2 = [3.; 4.]
+     x3 = [4.; 5.]
+
+     u0 = [5.; 6.; 7.]
+     u1 = [7.; 8.; 9.]
+     u2 = [9.; 10.; 11.]
+
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     n_x = 2
+     n_u = 3
+     T = 3
+
+     function f(x, u)
+          return norm(u)^2 * [sin(x[1])*x[2]; sin(x[2])*x[1]]
+     end
+
+     constraint_vec = nonlinear_eq_constraint(z, x0, n_x, n_u, T, f)
+
+     expected_vec = x1 - f(x0, u0)
+     expected_vec = vcat(expected_vec, x2 - f(x1, u1))
+     expected_vec = vcat(expected_vec, x3 - f(x2, u2))
+
+     tol = 1e-7
+     # println(constraint_vec)
+     # println(expected_vec)
+     @test norm(constraint_vec - expected_vec) < tol
+
+     x0 = [1.1; 2.2]
+     x1 = [2.2; 3.3]
+     x2 = [3.3; 4.4]
+     x3 = [4.4; 5.5]
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     nonlinear_eq_constraint(z, x0, n_x, n_u, T, f, constraint_vec)
+
+     expected_vec = x1 - f(x0, u0)
+     expected_vec = vcat(expected_vec, x2 - f(x1, u1))
+     expected_vec = vcat(expected_vec, x3 - f(x2, u2))
+     # println(constraint_vec)
+     # println(expected_vec)
+     @test norm(constraint_vec - expected_vec) < tol
+ end
+ 
+
+ @testset "test_nonlinear_eq_jacobian" begin
+     """
+     Test to see if nonlinear_eq_jacobian returns the correct answer.
+     """
+     x0 = [1.; 2.]
+     x1 = [2.; 3.]
+     x2 = [3.; 4.]
+     x3 = [4.; 5.]
+
+     u0 = [5.; 6.; 7.]
+     u1 = [7.; 8.; 9.]
+     u2 = [9.; 10.; 11.]
+
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     n_x = 2
+     n_u = 3
+     T = 3
+
+     function f(x, u)
+          return norm(u)^2 * [sin(x[1])*x[2]; sin(x[2])*x[1]]
+     end
+
+     function fx(x, u)
+          mat = [cos(x[1])*x[2] sin(x[1]); 
+                 sin(x[2]) cos(x[2])*x[1]]
+          return norm(u)^2 * mat
+     end
+
+     function fu(x, u)
+          return 2*[sin(x[1])*x[2]; sin(x[2])*x[1]] * transpose(u)
+     end
+
+     epsilon = 1e-8
+     fx1 = (f(x0 + [epsilon; 0], u0) - f(x0, u0)) / epsilon
+     fx2 = (f(x0 + [0; epsilon], u0) - f(x0, u0)) / epsilon
+     fx_hat = hcat(fx1, fx2)
+
+     fu1 = (f(x0, u0 + [epsilon; 0; 0]) - f(x0, u0)) / epsilon
+     fu2 = (f(x0, u0 + [0; epsilon; 0]) - f(x0, u0)) / epsilon
+     fu3 = (f(x0, u0 + [0; 0; epsilon]) - f(x0, u0)) / epsilon
+     fu_hat = hcat(fu1, fu2, fu3)
+
+
+     # Ensure my Jacobians fx and fu were computed right.
+     tol = 1e-5
+     @test norm(fx(x0, u0) - fx_hat) < tol
+     @test norm(fu(x0, u0) - fu_hat) < tol
+
+     id = Matrix{Float64}(I, 2, 2)
+     test_jac = zeros((3*2, 3*(2+3)))
+     test_jac[1:2, 1:3] = -fu(x0, u0) 
+     test_jac[1:2, 4:5] = id
+
+     test_jac[3:4, 4:5] = -fx(x1, u1)
+     test_jac[3:4, 6:8] = -fu(x1, u1) 
+     test_jac[3:4, 9:10] = id 
+
+     test_jac[5:6, 9:10] = -fx(x2, u2)
+     test_jac[5:6, 11:13] = -fu(x2, u2)
+     test_jac[5:6, 14:15] = id
+
+     jac = nonlinear_eq_jacobian(z, x0, n_x, n_u, T, fx, fu)
+     @test norm(jac - test_jac) < tol
+     # println(jac)
+     # println(test_jac)
+
+     # Now perturb x1 and u2 by a lot. Update jac.
+     x1 += [1., 2.]
+     u2 += [4., 1., 5.]
+     z = vcat(u0, x1, u1, x2, u2, x3)
+     nonlinear_eq_jacobian(z, x0, n_x, n_u, T, fx, fu, jac)
+
+     # Update test_jac.
+     test_jac[3:4, 4:5] = -fx(x1, u1)
+     test_jac[3:4, 6:8] = -fu(x1, u1) 
+     test_jac[5:6, 9:10] = -fx(x2, u2)
+     test_jac[5:6, 11:13] = -fu(x2, u2)
+     @test norm(jac - test_jac) < tol
+     # println(jac)
+     # println(test_jac)
+ end
+ 
