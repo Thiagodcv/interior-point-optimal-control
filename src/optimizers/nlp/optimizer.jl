@@ -1,5 +1,6 @@
 include("./search_dir.jl")
 include("./bfgs.jl")
+include("./merit_function.jl")
 include("../qp/search_dir.jl")
 include("../qp/optimizer.jl")
 
@@ -45,7 +46,7 @@ function pdip_nlp(param, eq_consts, z0)
 
     # Barrier parameter and initial estimate of Hessian
     mu = transpose(s) * lambda / n_lam
-    B = copy(param["H"])
+    B = 2*copy(param["H"])
 
     # Initial kkt residual and its Jacobian
     kkt_res = kkt_residual_nlp(z, lambda, nu, s, param)
@@ -67,7 +68,17 @@ function pdip_nlp(param, eq_consts, z0)
 
         # Update approximate Hessian using BFGS
         alpha = primal_dual_step(s, lambda, aff_dir["s"], aff_dir["lambda"])
-        z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
+
+        # Armijo linesearch goes here
+        p_z = aff_dir["x"] + cc_dir["x"]
+        p_s = aff_dir["s"] + cc_dir["s"]
+        # alpha = armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, param, B)
+        # println("alpha: ", alpha)
+        # if abs(alpha) < 1e-10
+        #     println("Hey")
+        # end
+
+        z_next = z + alpha * p_z
         eq_jac_next = eq_consts["jac"](z_next)
         B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
 
@@ -78,7 +89,7 @@ function pdip_nlp(param, eq_consts, z0)
 
         # Update iterates
         z = z_next
-        s = s + alpha * (aff_dir["s"] + cc_dir["s"])
+        s = s + alpha * p_s
         lambda = lambda + alpha * (aff_dir["lambda"] + cc_dir["lambda"])
         nu = nu + alpha * (aff_dir["nu"] + cc_dir["nu"])
 
