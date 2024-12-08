@@ -44,8 +44,7 @@ function pdip_nlp(param, eq_consts, z0)
     lambda = 1 ./ s
     nu = ones((n_nu,))
 
-    # Barrier parameter and initial estimate of Hessian
-    mu = transpose(s) * lambda / n_lam
+    # Initial estimate of Hessian
     B = 2*copy(param["H"])
 
     # Initial kkt residual and its Jacobian
@@ -58,6 +57,9 @@ function pdip_nlp(param, eq_consts, z0)
         end
 
         aff_dir = compute_affine_scaling_dir(kkt_res, kkt_jac, n_z, n_lam, n_nu)
+
+        # Compute barrier parameter
+        mu = transpose(s) * lambda / n_lam
 
         # Compute sigma
         alpha_sigma = sigma_step(s, lambda, aff_dir["s"], aff_dir["lambda"])  # Figure this out.
