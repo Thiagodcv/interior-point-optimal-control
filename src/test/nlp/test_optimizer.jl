@@ -129,7 +129,7 @@ include("../../optimizers/nlp/optimizer.jl")
     qp_dict = mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 
     param = Dict()
-    param["H"] = qp_dict["Q"]
+    param["H"] = qp_dict["Q"]  # Usually would have to multiply by 2 but taken care of by function.
     param["g"] = qp_dict["q"]
     param["P"] = qp_dict["G"]
     param["h"] = qp_dict["h"]
