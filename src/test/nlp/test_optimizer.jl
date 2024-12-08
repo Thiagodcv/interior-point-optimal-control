@@ -86,9 +86,9 @@ include("../../optimizers/nlp/optimizer.jl")
     Test to see if NLP optimizer can solve the pendulum problem.
     """
     # initial state, the latest input, and the time horizon
-    x0 = [0.9*pi; 0.]
+    x0 = [0.6*pi; 2.]
     u_latest = [0.]
-    T = 10
+    T = 20
     n_x = 2
     n_u = 1
 
@@ -113,7 +113,7 @@ include("../../optimizers/nlp/optimizer.jl")
     limit_dict["u_ub"] = [big_num]
     limit_dict["u_lb"] = -limit_dict["u_ub"]
 
-    limit_dict["du_ub"] = [big_num]
+    limit_dict["du_ub"] = [2.]
     limit_dict["du_lb"] = -limit_dict["du_ub"]
 
     limit_dict["x_T_ub"] = [big_num; big_num]
@@ -134,7 +134,7 @@ include("../../optimizers/nlp/optimizer.jl")
     param["P"] = qp_dict["G"]
     param["h"] = qp_dict["h"]
 
-    g = 1  # nlp diverges for higher than 9.835
+    g = 8  # nlp diverges for higher than 9.835
     dt = 0.2
 
     # The continuous-time dynamics function
