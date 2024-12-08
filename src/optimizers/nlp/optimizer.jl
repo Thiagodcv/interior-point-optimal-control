@@ -95,3 +95,28 @@ function pdip_nlp(param, eq_consts, z0)
 
     error("Did not converge within max_iters = ", max_iters, " iterations.")
 end
+
+
+"""
+    frac_to_boundary(u, p_u, tau)
+
+Finds a step size using the fraction to boundary rule. 
+
+# Arguments
+- `u::Array`: the slack variable.
+- `p_u::Array`: the step in the slack variable.
+- `tau::Float64`: the parameter for frac_to_boundary
+
+# Returns
+- `Float64`: the step size found using the fraction to boundary rule.
+
+"""
+function frac_to_boundary(u, p_u, tau=0.995)
+    neg_idx = findall(x -> x < 0, p_u)
+
+    if isempty(neg_idx)
+        alpha_max = 1
+    else
+        alpha_max = minimum(-tau * u[neg_idx] ./ p_u[neg_idx])
+    end
+end

@@ -227,3 +227,17 @@ end
 #     ret = pdip_nlp(param, eq_consts, x0)
 #     println("ret: ", ret)
 # end
+
+
+@testset "test_frac_to_boundary" begin
+    u = [1.; 0.1; 4.]
+    p_u = [-2.; -5.; 1.]
+    tau = 0.995
+
+    alpha = frac_to_boundary(u, p_u, tau)
+
+    tol = 1e-6
+    # println("LHS: ", u + alpha*p_u)
+    # println("RHS: ", (1-tau)*u)
+    @test all(u + alpha*p_u  >= (1-tau)*u)
+end
