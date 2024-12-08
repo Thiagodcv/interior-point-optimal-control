@@ -1,5 +1,6 @@
 include("./search_dir.jl")
 include("./bfgs.jl")
+include("./merit_function.jl")
 include("../qp/search_dir.jl")
 include("../qp/optimizer.jl")
 
@@ -25,7 +26,7 @@ is specifically tailored to optimal control problems.
 - `Dict{String, Array}`: primal dual solution and optimization details.
 """
 function pdip_nlp(param, eq_consts, z0)
-    epsilon = 1e-8
+    epsilon = 1e-3
     max_iters = 100
 
     # Evaluate equality constraints at z0
@@ -43,9 +44,8 @@ function pdip_nlp(param, eq_consts, z0)
     lambda = 1 ./ s
     nu = ones((n_nu,))
 
-    # Barrier parameter and initial estimate of Hessian
-    mu = transpose(s) * lambda / n_lam
-    B = copy(param["H"])
+    # Initial estimate of Hessian
+    B = 2*copy(param["H"])
 
     # Initial kkt residual and its Jacobian
     kkt_res = kkt_residual_nlp(z, lambda, nu, s, param)
@@ -58,6 +58,9 @@ function pdip_nlp(param, eq_consts, z0)
 
         aff_dir = compute_affine_scaling_dir(kkt_res, kkt_jac, n_z, n_lam, n_nu)
 
+        # Compute barrier parameter
+        mu = transpose(s) * lambda / n_lam
+
         # Compute sigma
         alpha_sigma = sigma_step(s, lambda, aff_dir["s"], aff_dir["lambda"])  # Figure this out.
         sigma = transpose(s + alpha_sigma * aff_dir["s"]) * (lambda + alpha_sigma * aff_dir["lambda"]) / (transpose(s) * lambda)
@@ -65,15 +68,14 @@ function pdip_nlp(param, eq_consts, z0)
 
         cc_dir = centering_plus_corrector_dir_nlp(kkt_jac, aff_dir["s"], aff_dir["lambda"], sigma, s, mu, n_z, n_lam, n_nu)
 
-        # Update approximate Hessian using BFGS
+        # Compute step size
         alpha = primal_dual_step(s, lambda, aff_dir["s"], aff_dir["lambda"])
+
+        # Update approximate Hessian using BFGS
         z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
         eq_jac_next = eq_consts["jac"](z_next)
         B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
 
-        # println("min_abs_eval(kkt_jac): ", minimum(abs.(eigvals(kkt_jac))))
-        # println("min_eval(B): ", minimum(eigvals(B)))
-        # println("min Sigma: ", minimum(Diagonal(1 ./ s) * lambda))
         println("norm(kkt_res): ", norm(kkt_res))
 
         # Update iterates
