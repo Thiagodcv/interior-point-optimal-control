@@ -68,30 +68,19 @@ function pdip_nlp(param, eq_consts, z0)
 
         cc_dir = centering_plus_corrector_dir_nlp(kkt_jac, aff_dir["s"], aff_dir["lambda"], sigma, s, mu, n_z, n_lam, n_nu)
 
-        # Update approximate Hessian using BFGS
+        # Compute step size
         alpha = primal_dual_step(s, lambda, aff_dir["s"], aff_dir["lambda"])
 
-        # Armijo linesearch goes here
-        p_z = aff_dir["x"] + cc_dir["x"]
-        p_s = aff_dir["s"] + cc_dir["s"]
-        # alpha = armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, param, B)
-        # println("alpha: ", alpha)
-        # if abs(alpha) < 1e-10
-        #     println("Hey")
-        # end
-
-        z_next = z + alpha * p_z
+        # Update approximate Hessian using BFGS
+        z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
         eq_jac_next = eq_consts["jac"](z_next)
         B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
 
-        # println("min_abs_eval(kkt_jac): ", minimum(abs.(eigvals(kkt_jac))))
-        # println("min_eval(B): ", minimum(eigvals(B)))
-        # println("min Sigma: ", minimum(Diagonal(1 ./ s) * lambda))
         println("norm(kkt_res): ", norm(kkt_res))
 
         # Update iterates
         z = z_next
-        s = s + alpha * p_s
+        s = s + alpha * (aff_dir["s"] + cc_dir["s"])
         lambda = lambda + alpha * (aff_dir["lambda"] + cc_dir["lambda"])
         nu = nu + alpha * (aff_dir["nu"] + cc_dir["nu"])
 
