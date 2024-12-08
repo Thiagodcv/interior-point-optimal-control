@@ -69,7 +69,9 @@ function pdip_nlp(param, eq_consts, z0)
         cc_dir = centering_plus_corrector_dir_nlp(kkt_jac, aff_dir["s"], aff_dir["lambda"], sigma, s, mu, n_z, n_lam, n_nu)
 
         # Compute step size
-        alpha = primal_dual_step(s, lambda, aff_dir["s"], aff_dir["lambda"])
+        alpha = primal_dual_step(s, lambda, aff_dir["s"] + cc_dir["s"], aff_dir["lambda"] + cc_dir["lambda"])
+        # alpha_s = frac_to_boundary(s, aff_dir["s"] + cc_dir["s"])
+        # alpha_lam = frac_to_boundary(lambda, aff_dir["lambda"] + cc_dir["lambda"])
 
         # Update approximate Hessian using BFGS
         z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
