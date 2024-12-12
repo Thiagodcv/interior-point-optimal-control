@@ -1,5 +1,6 @@
 include("../tools/mpc_tools.jl")
 include("../optimizers/qp/optimizer.jl")
+using Plots
 
 
 n = 2
@@ -51,8 +52,33 @@ qp_dict = mpc_to_qp(cost_dict, constraint_dict, system_dict, x0, u_latest, T)
 x_init = zeros((T*(n+m),))
 ret = pdip_qp(qp_dict, x_init)
 ret_separate = separate_solution(ret["x"], n, m, u_latest, T)
-println("iters: ", ret["iters"])
-# println("solution: ", ret["x"])
-println("state solution: ", ret_separate["x"])
-println("input solution: ", ret_separate["u"])
-println("diff input solution: ", ret_separate["du"])
+# println("iters: ", ret["iters"])
+# # println("solution: ", ret["x"])
+# println("state solution: ", ret_separate["x"])
+# println("input solution: ", ret_separate["u"])
+# println("diff input solution: ", ret_separate["du"])
+
+x1 = vcat(x0[1], ret_separate["x"][1:2:end])
+x2 = vcat(x0[2], ret_separate["x"][2:2:end])
+u = vcat(ret_separate["u"], missing)
+du = vcat(ret_separate["du"], missing)
+t_steps = collect(0:T)
+
+yticks1 = ([-2., 0., 2., 4.], ["-2.0", "0.0", "2.0", "4.0"])
+p1 = plot(t_steps, x1, ylabel="vₜ", ylim=(-2, 5.5), yticks=yticks1)
+
+yticks2 = ([-2., -1., 0., 1.], ["-2.0", "-1.0", "0.0", "1.0"])
+p2 = plot(t_steps, x2, ylabel="wₜ", ylim=(-2, 1), yticks=yticks2)
+
+yticks3 = ([-1., 0., 1.], ["-1.0", "0.0", "1.0"])
+p3 = plot(t_steps, u, ylabel="uₜ", ylim=(-1.5, 1.5), yticks=yticks3)
+p4 = plot(t_steps, du, ylabel="Δuₜ", xlabel="t", ylim=(-1, 1))
+plot(p1, p2, p3, p4, layout=(4,1), legend=false)
+
+# plot(t_steps, [x1, x2, u, du], layout=(4,1), label=["vₜ" "wₜ" "uₜ" "Δuₜ"])
+# print(x1)
+# println(x2)
+# print(u)
+# println(u)
+# print(size(du))
+# print(size(t_steps))
