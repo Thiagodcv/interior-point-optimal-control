@@ -13,7 +13,7 @@ Updates the approximation of the Lagrangian Hessian according to damped BFGS upd
 - `B::Array`: the BFGS approximation from the previous timestep.
 """
 function damped_bfgs_update(z_curr, z_next, eq_jac_curr, eq_jac_next, H, nu, B)
-    y = H*(z_next - z_curr) + transpose(eq_jac_next - eq_jac_curr) * nu
+    y = 2*H*(z_next - z_curr) + transpose(eq_jac_next - eq_jac_curr) * nu
     dz = z_next - z_curr 
 
     quad_form = dz' * B * dz
