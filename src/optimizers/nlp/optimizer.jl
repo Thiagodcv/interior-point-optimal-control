@@ -69,7 +69,9 @@ function pdip_nlp(param, eq_consts, z0)
         cc_dir = centering_plus_corrector_dir_nlp(kkt_jac, aff_dir["s"], aff_dir["lambda"], sigma, s, mu, n_z, n_lam, n_nu)
 
         # Compute step size
-        alpha = primal_dual_step(s, lambda, aff_dir["s"], aff_dir["lambda"])
+        alpha = primal_dual_step(s, lambda, aff_dir["s"] + cc_dir["s"], aff_dir["lambda"] + cc_dir["lambda"])
+        # alpha_s = frac_to_boundary(s, aff_dir["s"] + cc_dir["s"])
+        # alpha_lam = frac_to_boundary(lambda, aff_dir["lambda"] + cc_dir["lambda"])
 
         # Update approximate Hessian using BFGS
         z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
@@ -94,4 +96,29 @@ function pdip_nlp(param, eq_consts, z0)
     end
 
     error("Did not converge within max_iters = ", max_iters, " iterations.")
+end
+
+
+"""
+    frac_to_boundary(u, p_u, tau)
+
+Finds a step size using the fraction to boundary rule. 
+
+# Arguments
+- `u::Array`: the slack variable.
+- `p_u::Array`: the step in the slack variable.
+- `tau::Float64`: the parameter for frac_to_boundary
+
+# Returns
+- `Float64`: the step size found using the fraction to boundary rule.
+
+"""
+function frac_to_boundary(u, p_u, tau=0.995)
+    neg_idx = findall(x -> x < 0, p_u)
+
+    if isempty(neg_idx)
+        alpha_max = 1
+    else
+        alpha_max = minimum(-tau * u[neg_idx] ./ p_u[neg_idx])
+    end
 end
