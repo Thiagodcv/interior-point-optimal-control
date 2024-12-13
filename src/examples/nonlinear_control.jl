@@ -15,7 +15,7 @@ c = 1.
 cost_dict = Dict()
 cost_dict["Q"] = c*Matrix{Float64}(I, n_x, n_x)
 cost_dict["q"] = -2*c*d
-cost_dict["R"] = 00000.1*Matrix{Float64}(I, n_u, n_u)
+cost_dict["R"] = 0.01*Matrix{Float64}(I, n_u, n_u)
 cost_dict["r"] = zeros((n_u,))
 cost_dict["S"] = cost_dict["R"]
 cost_dict["Q_T"] = cost_dict["Q"]
@@ -102,15 +102,43 @@ z_init = repeat([0.; pi; 0.], T)
 ret = pdip_nlp(param, eq_consts, z_init)
 ret_separate = separate_solution(ret["z"], n_x, n_u, u_latest, T)
 
-println("iters: ", ret["iters"])
-# println("solution: ", ret["x"])
-println("state solution: ", ret_separate["x"])
-println("input solution: ", ret_separate["u"])
-println("diff input solution: ", ret_separate["du"])
+# println("iters: ", ret["iters"])
+# # println("solution: ", ret["x"])
+# println("state solution: ", ret_separate["x"])
+# println("input solution: ", ret_separate["u"])
+# println("diff input solution: ", ret_separate["du"])
 
-z = ret["z"]
-println("Objective at solution: ", z' * param["H"] * z + param["g"]' * z)
-println("Equality constraints at solution: ", norm(eq_vec(z)))
-z_test = repeat([0.; pi; 0.], T)
-println("Objective at test: ", z_test' * param["H"] * z_test + param["g"]' * z_test)
-println("Equality constraints at test: ", norm(eq_vec(z_test)))
+# z = ret["z"]
+# println("Objective at solution: ", z' * param["H"] * z + param["g"]' * z)
+# println("Equality constraints at solution: ", norm(eq_vec(z)))
+# z_test = repeat([0.; pi; 0.], T)
+# println("Objective at test: ", z_test' * param["H"] * z_test + param["g"]' * z_test)
+# println("Equality constraints at test: ", norm(eq_vec(z_test)))
+
+x1 = vcat(x0[1], ret_separate["x"][1:2:end])
+x2 = vcat(x0[2], ret_separate["x"][2:2:end])
+u = vcat(ret_separate["u"], missing)
+du = vcat(ret_separate["du"], missing)
+t_steps = dt*collect(0:T)
+
+yticks1 = ([1.8, 2.6, 3.4], ["1.8", "2.6", "3.4"])
+p1 = plot(t_steps, x1, ylabel="θₜ", ylim=(1.8, 3.4), yticks=yticks1, legend=false)
+hline!(p1, [pi], color=:red, linewidth=0.5)
+
+yticks2 = ([-1., -0., 1., 2.], ["-1.0", "0.0", "1.0", "2.0"])
+p2 = plot(t_steps, x2, ylabel="θ'ₜ", ylim=(-1, 2), yticks=yticks2, legend=false)
+hline!(p2, [0.], color=:red, linewidth=0.5)
+
+yticks3 = ([0., 3., 6., 9.], ["0.0", "3.0", "6.0", "9.0"])
+p3 = plot(t_steps, u, ylabel="uₜ", ylim=(-2, 10), yticks=yticks3, legend=false)
+hline!(p3, [0.], color=:red, linewidth=0.5)
+
+p4 = plot(t_steps, du, ylabel="Δuₜ", xlabel="t (seconds)", ylim=(-2.5, 2.5), legend=false)
+hline!(p4, [0.], color=:red, linewidth=0.5)
+hline!(p4, [2.], color=:orange, linewidth=1, linestyle=:dash)
+hline!(p4, [-2.], color=:orange, linewidth=1, linestyle=:dash)
+
+lot(p1, p2, p3, p4, layout=(4,1))
+
+# combined = plot(p1, p2, p3, p4, layout=(4,1))
+# png(combined, "nlp.png")
