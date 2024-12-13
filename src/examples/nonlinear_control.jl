@@ -138,7 +138,7 @@ hline!(p4, [0.], color=:red, linewidth=0.5)
 hline!(p4, [2.], color=:orange, linewidth=1, linestyle=:dash)
 hline!(p4, [-2.], color=:orange, linewidth=1, linestyle=:dash)
 
-lot(p1, p2, p3, p4, layout=(4,1))
+plot(p1, p2, p3, p4, layout=(4,1))
 
 # combined = plot(p1, p2, p3, p4, layout=(4,1))
 # png(combined, "nlp.png")
