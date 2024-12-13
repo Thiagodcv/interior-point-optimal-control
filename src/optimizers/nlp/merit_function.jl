@@ -54,7 +54,7 @@ function dmerit_dz(z, s, params, rho)
 
     eq_vec = params["eq_vec"]
     eq_jac = params["eq_jac"]
-    fudge = 1e-9
+    fudge = 1e-10
     eq_part = rho / (norm(eq_vec) + fudge) * transpose(eq_jac) * eq_vec
 
     P = params["P"]
@@ -87,7 +87,7 @@ function dmerit_ds(z, s, mu, params, rho)
     h = params["h"]
 
     barrier_part = -mu ./ s 
-    fudge = 1e-9
+    fudge = 1e-10
     ineq_part = rho / (norm(P*z - h + s) + fudge) * (P*z - h + s)
 
     return barrier_part + ineq_part
@@ -95,7 +95,7 @@ end
 
 
 """
-    armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, params, dd_L)
+    armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, params, eq_consts, dd_L)
 
 Armijo linesearch over the primal and slack variables conducted on the merit function.
 
@@ -113,26 +113,32 @@ Armijo linesearch over the primal and slack variables conducted on the merit fun
         - "h"::Array: the inequality constraint vector,
         - "eq_vec"::Array: the equality constraint residual vector evaluated at z.
         - "eq_jac"::Array: the Jacobian of the equality constraint residual vector evaluated at z.
+- `eq_consts::Dict{String, Function}`: the residual vector and its Jacobian of equality constraints. Contains key-value pairs
+        - "vec"::Function: the residual vector as a function of z,
+        - "jac"::Function: the Jacobian as a function of z.
 - `dd_L:Array`: the Hessian of the Lagrangian, approximated or exact. Assumed to be positive definite.
 
 # Returns
 - `Float64`: a step size.
 """
-function armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, params, dd_L)
+function armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, params, eq_consts, dd_L)
     max_iters = 100
     heta = 10^(-4)  # in (0, 1). Slope dampener. 
     c = 0.5  # in (0, 1). Contraction factor for decreasing step length.
-    rho = 1 # compute_rho(z, p_z, params, dd_L)  # merit function parameter
+    rho = 1000 # compute_rho(z, p_z, params, dd_L)  # merit function parameter
 
     alpha = alpha_max
     merit_curr = merit_func(z, s, mu, params, rho)
     d_merit = dmerit_dz(z, s, params, rho)' * p_z + dmerit_ds(z, s, mu, params, rho)' * p_s
 
+    params_step = copy(params)
     for iter in 1:max_iters
         z_next = z + alpha * p_z
         s_next = s + alpha * p_s
 
-        merit_next = merit_func(z_next, s_next, mu, params, rho)
+        params_step["eq_vec"] = eq_consts["vec"](z_next)
+        params_step["eq_jac"] = eq_consts["jac"](z_next)
+        merit_next = merit_func(z_next, s_next, mu, params_step, rho)
 
         if merit_next <= merit_curr + heta * alpha * d_merit
             return alpha

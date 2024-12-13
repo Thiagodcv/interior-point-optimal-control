@@ -1,5 +1,6 @@
 include("../tools/mpc_tools.jl")
-include("../optimizers/nlp/optimizer.jl")
+include("../optimizers/nlp/optimizer2.jl")
+using Plots
 
 
 # initial state, the latest input, and the time horizon
@@ -51,7 +52,7 @@ param["g"] = qp_dict["q"]
 param["P"] = qp_dict["G"]
 param["h"] = qp_dict["h"]
 
-g = 8  # nlp diverges for higher than 9.835
+g = 9.8  # nlp diverges for higher than 9.835
 dt = 0.4
 
 # The continuous-time dynamics function
