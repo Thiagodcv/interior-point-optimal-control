@@ -104,17 +104,10 @@ ret = pdip_nlp(param, eq_consts, z_init)
 ret_separate = separate_solution(ret["z"], n_x, n_u, u_latest, T)
 
 # println("iters: ", ret["iters"])
-# # println("solution: ", ret["x"])
+# println("solution: ", ret["x"])
 # println("state solution: ", ret_separate["x"])
 # println("input solution: ", ret_separate["u"])
 # println("diff input solution: ", ret_separate["du"])
-
-# z = ret["z"]
-# println("Objective at solution: ", z' * param["H"] * z + param["g"]' * z)
-# println("Equality constraints at solution: ", norm(eq_vec(z)))
-# z_test = repeat([0.; pi; 0.], T)
-# println("Objective at test: ", z_test' * param["H"] * z_test + param["g"]' * z_test)
-# println("Equality constraints at test: ", norm(eq_vec(z_test)))
 
 x1 = vcat(x0[1], ret_separate["x"][1:2:end])
 x2 = vcat(x0[2], ret_separate["x"][2:2:end])

@@ -26,9 +26,8 @@ is specifically tailored to optimal control problems.
 - `Dict{String, Array}`: primal dual solution and optimization details.
 """
 function pdip_nlp(param, eq_consts, z0)
-    epsilon = 1e-3
+    epsilon = 1e-6
     max_iters = 100
-    max_iners = 1
 
     # Evaluate equality constraints at z0
     param["eq_vec"] = eq_consts["vec"](z0)
@@ -65,45 +64,34 @@ function pdip_nlp(param, eq_consts, z0)
         end
         println("norm(kkt_res): ", norm(kkt_res))
 
-        for iner in 1:max_iners # (max_iners+1)
-            if norm(kkt_res) < mu
-                break
-            end
-            println("norm(kkt_res): ", norm(kkt_res))
+        p_dir = compute_affine_scaling_dir(kkt_res, kkt_jac, n_z, n_lam, n_nu)  # Actually, the full direction
+        alpha_s_max = frac_to_boundary(s, p_dir["s"], tau)
+        alpha_lam_max = frac_to_boundary(lambda, p_dir["lambda"], tau)
 
-            # if iner > max_iners
-            #     error("Did not converge within max_iners = ", max_iners, " iterations.")
-            # end
+        # Find optimal step size
+        alpha_s = armijo_linesearch(z, s, p_dir["x"], p_dir["s"], alpha_s_max, mu, param, eq_consts, B)
+        alpha_lam = alpha_lam_max
+        # println("alpha_s: ", alpha_s)
+        # println("alpha_lam: ", alpha_lam)
 
-            p_dir = compute_affine_scaling_dir(kkt_res, kkt_jac, n_z, n_lam, n_nu)  # Actually, the full direction
-            alpha_s_max = frac_to_boundary(s, p_dir["s"], tau)
-            alpha_lam_max = frac_to_boundary(lambda, p_dir["lambda"], tau)
+        # Update Hessian approximation
+        z_next = z + alpha_s * p_dir["x"]
+        eq_jac_next = eq_consts["jac"](z_next)
+        B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
 
-            # Find optimal step size
-            alpha_s = armijo_linesearch(z, s, p_dir["x"], p_dir["s"], alpha_s_max, mu, param, eq_consts, B)
-            println("alpha_s: ", alpha_s)
-            alpha_lam = alpha_s  # alpha_lam_max
-            println("alpha_lam: ", alpha_lam)
+        # Update iterates
+        z = z_next
+        s = s + alpha_s * p_dir["s"]
+        lambda = lambda + alpha_lam * p_dir["lambda"]
+        nu = nu + alpha_lam * p_dir["nu"]
 
-            # Update Hessian approximation
-            z_next = z + alpha_s * p_dir["x"]
-            eq_jac_next = eq_consts["jac"](z_next)
-            B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
+        # Update equality constraint residual and its Jacobian
+        param["eq_vec"] = eq_consts["vec"](z)
+        param["eq_jac"] = eq_jac_next
 
-            # Update iterates
-            z = z_next
-            s = s + alpha_s * p_dir["s"]
-            lambda = lambda + alpha_lam * p_dir["lambda"]
-            nu = nu + alpha_lam * p_dir["nu"]
-
-            # Update equality constraint residual and its Jacobian
-            param["eq_vec"] = eq_consts["vec"](z)
-            param["eq_jac"] = eq_jac_next
-
-            # Update KKT residual and its Jacobian
-            kkt_residual_nlp(z, lambda, nu, s, param, kkt_res, mu)
-            kkt_jacobian_nlp(lambda, s, B, param, kkt_jac)
-        end
+        # Update KKT residual and its Jacobian
+        kkt_residual_nlp(z, lambda, nu, s, param, kkt_res, mu)
+        kkt_jacobian_nlp(lambda, s, B, param, kkt_jac)
 
         mu = sigma * mu
     end

@@ -125,7 +125,8 @@ function armijo_linesearch(z, s, p_z, p_s, alpha_max, mu, params, eq_consts, dd_
     max_iters = 100
     heta = 10^(-4)  # in (0, 1). Slope dampener. 
     c = 0.5  # in (0, 1). Contraction factor for decreasing step length.
-    rho = 1000 # compute_rho(z, p_z, params, dd_L)  # merit function parameter
+    rho = 1000000  # compute_rho(z, p_z, params, dd_L)  # merit function parameter
+    # println("rho: ", rho)
 
     alpha = alpha_max
     merit_curr = merit_func(z, s, mu, params, rho)
@@ -180,7 +181,7 @@ function compute_rho(z, p_z, params, dd_L)
 
     rho_lb = transpose(df) * p_z + (sigma/2)*transpose(p_z) * dd_L * p_z
     rho_lb = rho_lb/((1-lb_param)*norm(params["eq_vec"]))
-    rho = min((1.01)*rho_lb, 0.999)
+    rho = (1.01)*rho_lb
 
     return rho
 end
