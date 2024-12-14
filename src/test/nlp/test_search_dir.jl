@@ -28,8 +28,8 @@ using Test
     nu = [1.; -4.; 3.4]
 
     sol = zeros((10,))
-    sol[1:3] = H*z + g + transpose(P)*lambda + transpose(eq_jac)*nu 
-    sol[4:5] = lambda
+    sol[1:3] = 2*H*z + g + transpose(P)*lambda + transpose(eq_jac)*nu 
+    sol[4:5] = Diagonal(s) * lambda
     sol[6:7] = P*z - h + s 
     sol[8:10] = eq_vec
 
@@ -37,6 +37,8 @@ using Test
     res_vec = kkt_residual_nlp(z, lambda, nu, s, param)
 
     tol = 1e-6
+    println(sol)
+    println(res_vec)
     @test norm(sol - res_vec) < tol
 
     z = [3., 3., -3.]
@@ -48,8 +50,8 @@ using Test
               5. 7. 6.;
               -8. 3. 6.]
 
-    sol[1:3] = H*z + g + transpose(P)*lambda + transpose(eq_jac)*nu 
-    sol[4:5] = lambda
+    sol[1:3] = 2*H*z + g + transpose(P)*lambda + transpose(eq_jac)*nu 
+    sol[4:5] = Diagonal(s) * lambda
     sol[6:7] = P*z - h + s 
     sol[8:10] = eq_vec
 
@@ -95,8 +97,8 @@ end
     sol[1:3, 6:7] = transpose(P)
     sol[1:3, 8:10] = transpose(eq_jac)
 
-    sol[4:5, 4:5] = Diagonal(1 ./ s) * Diagonal(lambda)
-    sol[4:5, 6:7] = Matrix{Float64}(I, 2, 2)
+    sol[4:5, 4:5] = Diagonal(lambda)
+    sol[4:5, 6:7] = Diagonal(s)
 
     sol[6:7, 1:3] = P
     sol[6:7, 4:5] = Matrix{Float64}(I, 2, 2)
@@ -119,7 +121,8 @@ end
 
     sol[1:3, 1:3] = B
     sol[1:3, 8:10] = transpose(param["eq_jac"])
-    sol[4:5, 4:5] = Diagonal(1 ./ s) * Diagonal(lambda)
+    sol[4:5, 4:5] =  Diagonal(lambda)
+    sol[4:5, 6:7] = Diagonal(s)
     sol[8:10, 1:3] = param["eq_jac"]
 
     kkt_jacobian_nlp(lambda, s, B, param, jac)
