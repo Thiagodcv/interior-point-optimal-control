@@ -26,7 +26,7 @@ is specifically tailored to optimal control problems.
 - `Dict{String, Array}`: primal dual solution and optimization details.
 """
 function pdip_nlp(param, eq_consts, z0)
-    epsilon = 1e-7
+    epsilon = 1e-3
     max_iters = 100
 
     # Evaluate equality constraints at z0
@@ -47,53 +47,52 @@ function pdip_nlp(param, eq_consts, z0)
     # Initial estimate of Hessian
     B = 2*copy(param["H"])
 
-    # Initial mu
-    mu = transpose(s) * lambda / n_lam
-    sigma = 0.2
-
     # Initial kkt residual and its Jacobian
-    kkt_res = kkt_residual_nlp(z, lambda, nu, s, param, nothing, mu)
+    kkt_res = kkt_residual_nlp(z, lambda, nu, s, param)
     kkt_jac = kkt_jacobian_nlp(lambda, s, B, param)
-
-    # Fraction to boundary parameter
-    tau = 0.995
 
     for iter in 1:max_iters
         if norm(kkt_res) < epsilon
             return Dict("z" => z, "s" => s, "lambda" => lambda, "nu" => nu, "iters" => iter)
         end
-        println("norm(kkt_res): ", norm(kkt_res))
 
-        p_dir = compute_affine_scaling_dir(kkt_res, kkt_jac, n_z, n_lam, n_nu)  # Actually, the full direction
-        alpha_s_max = frac_to_boundary(s, p_dir["s"], tau)
-        alpha_lam_max = frac_to_boundary(lambda, p_dir["lambda"], tau)
+        aff_dir = compute_affine_scaling_dir(kkt_res, kkt_jac, n_z, n_lam, n_nu)
 
-        # Find optimal step size
-        alpha_s = armijo_linesearch(z, s, p_dir["x"], p_dir["s"], alpha_s_max, mu, param, eq_consts, B)
-        alpha_lam = alpha_lam_max
-        # println("alpha_s: ", alpha_s)
-        # println("alpha_lam: ", alpha_lam)
+        # Compute barrier parameter
+        mu = transpose(s) * lambda / n_lam
 
-        # Update Hessian approximation
-        z_next = z + alpha_s * p_dir["x"]
+        # Compute sigma
+        alpha_sigma = sigma_step(s, lambda, aff_dir["s"], aff_dir["lambda"])  # Figure this out.
+        sigma = transpose(s + alpha_sigma * aff_dir["s"]) * (lambda + alpha_sigma * aff_dir["lambda"]) / (transpose(s) * lambda)
+        sigma = sigma^3
+
+        cc_dir = centering_plus_corrector_dir_nlp(kkt_jac, aff_dir["s"], aff_dir["lambda"], sigma, s, mu, n_z, n_lam, n_nu)
+
+        # Compute step size
+        alpha = primal_dual_step(s, lambda, aff_dir["s"] + cc_dir["s"], aff_dir["lambda"] + cc_dir["lambda"])
+        # alpha_s = frac_to_boundary(s, aff_dir["s"] + cc_dir["s"])
+        # alpha_lam = frac_to_boundary(lambda, aff_dir["lambda"] + cc_dir["lambda"])
+
+        # Update approximate Hessian using BFGS
+        z_next = z + alpha * (aff_dir["x"] + cc_dir["x"])
         eq_jac_next = eq_consts["jac"](z_next)
         B = damped_bfgs_update(z, z_next, param["eq_jac"], eq_jac_next, param["H"], nu, B)
 
+        println("norm(kkt_res): ", norm(kkt_res))
+
         # Update iterates
         z = z_next
-        s = s + alpha_s * p_dir["s"]
-        lambda = lambda + alpha_lam * p_dir["lambda"]
-        nu = nu + alpha_lam * p_dir["nu"]
+        s = s + alpha * (aff_dir["s"] + cc_dir["s"])
+        lambda = lambda + alpha * (aff_dir["lambda"] + cc_dir["lambda"])
+        nu = nu + alpha * (aff_dir["nu"] + cc_dir["nu"])
 
-        # Update equality constraint residual and its Jacobian
-        param["eq_vec"] = eq_consts["vec"](z)
+        # Update equality constraints
+        param["eq_vec"] = eq_consts["vec"](z_next)
         param["eq_jac"] = eq_jac_next
 
         # Update KKT residual and its Jacobian
-        kkt_residual_nlp(z, lambda, nu, s, param, kkt_res, mu)
+        kkt_residual_nlp(z, lambda, nu, s, param, kkt_res)
         kkt_jacobian_nlp(lambda, s, B, param, kkt_jac)
-
-        mu = sigma * mu
     end
 
     error("Did not converge within max_iters = ", max_iters, " iterations.")
