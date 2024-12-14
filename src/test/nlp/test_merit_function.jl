@@ -79,4 +79,24 @@ using Test
     # println("true: ", dmerit_ds_true)
     # println("test: ", dmerit_ds_test)
     @test norm(dmerit_ds_true - dmerit_ds_test) < tol
+
+    p_z = [1.; 2.; 3.]
+    p_s = [0.1; 2.5]
+
+    alpha = 1e-7
+    params["eq_vec"] = eq_vec(z)
+    params["eq_jac"] = eq_jac(z)
+    direc_dmerit = p_z' * dmerit_dz(z, s, params, rho) + p_s' * dmerit_ds(z, s, mu, params, rho)
+
+    params_next = copy(params)
+    params_next["eq_vec"] = eq_vec(z+alpha*p_z)
+    params_next["eq_jac"] = eq_jac(z+alpha*p_z)
+    direc_dmerit_test = merit_func(z+alpha*p_z, s+alpha*p_s, mu, params_next, rho) - merit_func(z, s, mu, params, rho)
+    direc_dmerit_test = direc_dmerit_test/alpha
+
+    println("direc_dmerit: ", direc_dmerit)
+    println("direc_dmerit_test: ", direc_dmerit_test)
+    # println("diff between params: ", norm(params_next["eq_jac"] - params["eq_jac"]))
+    # println(merit_func(z+alpha*p_z, s+alpha*p_s, mu, params_next, rho) - merit_func(z+alpha*p_z, s+alpha*p_s, mu, params, rho))
+    @test norm(direc_dmerit - direc_dmerit_test) < tol
 end

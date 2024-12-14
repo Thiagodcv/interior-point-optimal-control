@@ -1,9 +1,10 @@
 include("../tools/mpc_tools.jl")
 include("../optimizers/nlp/optimizer.jl")
+using Plots
 
 
 # initial state, the latest input, and the time horizon
-x0 = [0.6*pi; 2.]
+x0 = [0.1*pi; 2.]
 u_latest = [0.]
 T = 20
 n_x = 2
@@ -30,7 +31,7 @@ limit_dict["x_lb"] = -limit_dict["x_ub"]
 limit_dict["u_ub"] = [big_num]
 limit_dict["u_lb"] = -limit_dict["u_ub"]
 
-limit_dict["du_ub"] = [2.]
+limit_dict["du_ub"] = [3.]
 limit_dict["du_lb"] = -limit_dict["du_ub"]
 
 limit_dict["x_T_ub"] = [big_num; big_num]
@@ -51,7 +52,7 @@ param["g"] = qp_dict["q"]
 param["P"] = qp_dict["G"]
 param["h"] = qp_dict["h"]
 
-g = 8  # nlp diverges for higher than 9.835
+g = 9.8  # nlp diverges for higher than 9.835
 dt = 0.4
 
 # The continuous-time dynamics function
@@ -103,17 +104,10 @@ ret = pdip_nlp(param, eq_consts, z_init)
 ret_separate = separate_solution(ret["z"], n_x, n_u, u_latest, T)
 
 # println("iters: ", ret["iters"])
-# # println("solution: ", ret["x"])
+# println("solution: ", ret["x"])
 # println("state solution: ", ret_separate["x"])
 # println("input solution: ", ret_separate["u"])
 # println("diff input solution: ", ret_separate["du"])
-
-# z = ret["z"]
-# println("Objective at solution: ", z' * param["H"] * z + param["g"]' * z)
-# println("Equality constraints at solution: ", norm(eq_vec(z)))
-# z_test = repeat([0.; pi; 0.], T)
-# println("Objective at test: ", z_test' * param["H"] * z_test + param["g"]' * z_test)
-# println("Equality constraints at test: ", norm(eq_vec(z_test)))
 
 x1 = vcat(x0[1], ret_separate["x"][1:2:end])
 x2 = vcat(x0[2], ret_separate["x"][2:2:end])
@@ -121,22 +115,23 @@ u = vcat(ret_separate["u"], missing)
 du = vcat(ret_separate["du"], missing)
 t_steps = dt*collect(0:T)
 
-yticks1 = ([1.8, 2.6, 3.4], ["1.8", "2.6", "3.4"])
-p1 = plot(t_steps, x1, ylabel="θₜ", ylim=(1.8, 3.4), yticks=yticks1, legend=false)
+yticks1 = ([0., 1., 2., 3.], ["0.0", "1.0", "2.0", "3.0"])
+p1 = plot(t_steps, x1, ylabel="θₜ", ylim=(0, 3.5), yticks=yticks1, legend=false)
 hline!(p1, [pi], color=:red, linewidth=0.5)
 
-yticks2 = ([-1., -0., 1., 2.], ["-1.0", "0.0", "1.0", "2.0"])
-p2 = plot(t_steps, x2, ylabel="θ'ₜ", ylim=(-1, 2), yticks=yticks2, legend=false)
+yticks2 = ([-1., 0., 1., 2.], ["-1.0", "0.0", "1.0", "2.0"])
+p2 = plot(t_steps, x2, ylabel="θ'ₜ", ylim=(-1.5, 2.5), yticks=yticks2, legend=false)
 hline!(p2, [0.], color=:red, linewidth=0.5)
 
-yticks3 = ([0., 3., 6., 9.], ["0.0", "3.0", "6.0", "9.0"])
-p3 = plot(t_steps, u, ylabel="uₜ", ylim=(-2, 10), yticks=yticks3, legend=false)
+yticks3 = ([-5., 0., 5., 10., 15.], ["-5.0", "0.0", "5.0", "10.0", "15.0"])
+p3 = plot(t_steps, u, ylabel="uₜ", ylim=(-5, 15), yticks=yticks3, legend=false)
 hline!(p3, [0.], color=:red, linewidth=0.5)
 
-p4 = plot(t_steps, du, ylabel="Δuₜ", xlabel="t (seconds)", ylim=(-2.5, 2.5), legend=false)
+yticks4 = ([-3., 0., 3.], ["-3.0", "0.0", "3.0"])
+p4 = plot(t_steps, du, ylabel="Δuₜ", xlabel="t (seconds)", ylim=(-3.2, 3.2), yticks=yticks4, legend=false)
 hline!(p4, [0.], color=:red, linewidth=0.5)
-hline!(p4, [2.], color=:orange, linewidth=1, linestyle=:dash)
-hline!(p4, [-2.], color=:orange, linewidth=1, linestyle=:dash)
+hline!(p4, limit_dict["du_ub"], color=:orange, linewidth=1, linestyle=:dash)
+hline!(p4, limit_dict["du_lb"], color=:orange, linewidth=1, linestyle=:dash)
 
 plot(p1, p2, p3, p4, layout=(4,1))
 

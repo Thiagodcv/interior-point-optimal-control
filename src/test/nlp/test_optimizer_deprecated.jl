@@ -1,6 +1,6 @@
 using Test
 include("../../tools/mpc_tools.jl")
-include("../../optimizers/nlp/optimizer.jl")
+include("../../optimizers/nlp/optimizer_deprecated.jl")
 
 
 # @testset "test_double_integrator" begin
