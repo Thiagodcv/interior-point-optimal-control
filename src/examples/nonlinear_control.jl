@@ -4,7 +4,7 @@ using Plots
 
 
 # initial state, the latest input, and the time horizon
-x0 = [0.6*pi; 2.]
+x0 = [0.1*pi; 2.]
 u_latest = [0.]
 T = 20
 n_x = 2
@@ -31,7 +31,7 @@ limit_dict["x_lb"] = -limit_dict["x_ub"]
 limit_dict["u_ub"] = [big_num]
 limit_dict["u_lb"] = -limit_dict["u_ub"]
 
-limit_dict["du_ub"] = [2.]
+limit_dict["du_ub"] = [3.]
 limit_dict["du_lb"] = -limit_dict["du_ub"]
 
 limit_dict["x_T_ub"] = [big_num; big_num]
@@ -115,22 +115,22 @@ u = vcat(ret_separate["u"], missing)
 du = vcat(ret_separate["du"], missing)
 t_steps = dt*collect(0:T)
 
-yticks1 = ([1.8, 2.6, 3.4], ["1.8", "2.6", "3.4"])
-p1 = plot(t_steps, x1, ylabel="θₜ", ylim=(1.8, 3.4), yticks=yticks1, legend=false)
+yticks1 = ([0., 1., 2., 3.], ["0.0", "1.0", "2.0", "3.0"])
+p1 = plot(t_steps, x1, ylabel="θₜ", ylim=(0, 3.5), yticks=yticks1, legend=false)
 hline!(p1, [pi], color=:red, linewidth=0.5)
 
-yticks2 = ([-1., -0., 1., 2.], ["-1.0", "0.0", "1.0", "2.0"])
-p2 = plot(t_steps, x2, ylabel="θ'ₜ", ylim=(-1, 2), yticks=yticks2, legend=false)
+yticks2 = ([-1., 0., 1., 2.], ["-1.0", "0.0", "1.0", "2.0"])
+p2 = plot(t_steps, x2, ylabel="θ'ₜ", ylim=(-1.5, 2.5), yticks=yticks2, legend=false)
 hline!(p2, [0.], color=:red, linewidth=0.5)
 
-yticks3 = ([0., 3., 6., 9.], ["0.0", "3.0", "6.0", "9.0"])
-p3 = plot(t_steps, u, ylabel="uₜ", ylim=(-2, 10), yticks=yticks3, legend=false)
+yticks3 = ([-5., 0., 5., 10., 15.], ["-5.0", "0.0", "5.0", "10.0", "15.0"])
+p3 = plot(t_steps, u, ylabel="uₜ", ylim=(-5, 15), yticks=yticks3, legend=false)
 hline!(p3, [0.], color=:red, linewidth=0.5)
 
-p4 = plot(t_steps, du, ylabel="Δuₜ", xlabel="t (seconds)", ylim=(-2.5, 2.5), legend=false)
+p4 = plot(t_steps, du, ylabel="Δuₜ", xlabel="t (seconds)", ylim=(-3.2, 3.2), legend=false)
 hline!(p4, [0.], color=:red, linewidth=0.5)
-hline!(p4, [2.], color=:orange, linewidth=1, linestyle=:dash)
-hline!(p4, [-2.], color=:orange, linewidth=1, linestyle=:dash)
+hline!(p4, limit_dict["du_ub"], color=:orange, linewidth=1, linestyle=:dash)
+hline!(p4, limit_dict["du_lb"], color=:orange, linewidth=1, linestyle=:dash)
 
 plot(p1, p2, p3, p4, layout=(4,1))
 
