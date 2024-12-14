@@ -8,8 +8,10 @@ include("../qp/optimizer.jl")
 """
     pdip_nlp(param, eq_consts, x0)
 
+NOTE: THIS IS THE DEPRECATED NONLINEAR SOLVER. Wouldn't recommend using this as it's pretty unstable.
+
 Primal-dual interior point NLP with Mehrotra correction. This implementation
-is specifically tailored to optimal control problems.
+is specifically tailored for optimal control problems.
 
 # Arguments
 - `param::Dict{String, Array}`: the parameters of the NLP problem. Contains key-value pairs

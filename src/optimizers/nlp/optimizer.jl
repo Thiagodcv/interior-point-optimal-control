@@ -8,8 +8,8 @@ include("../qp/optimizer.jl")
 """
     pdip_nlp(param, eq_consts, x0)
 
-Primal-dual interior point NLP with Mehrotra correction. This implementation
-is specifically tailored to optimal control problems.
+Primal-dual interior point solver for NLP. This implementation is specifically tailored for 
+optimal control problems.
 
 # Arguments
 - `param::Dict{String, Array}`: the parameters of the NLP problem. Contains key-value pairs
